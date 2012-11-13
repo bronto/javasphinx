@@ -1,0 +1,30 @@
+
+from distutils.core import setup
+
+setup(
+    name = "javasphinx",
+    packages = ["javasphinx"],
+    version = "0.9.0",
+    author = "Chris Thunes",
+    author_email = "cthunes@brewtab.com",
+    url = "http://github.com/c2nes/javasphinx",
+    description = "Sphinx extension for documenting Java projects",
+    classifiers = [
+        "Programming Language :: Python",
+        "Development Status :: 4 - Beta",
+        "Operating System :: OS Independent",
+        "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries"
+        ],
+    long_description = """\
+==========
+javasphinx
+==========
+
+javasphinx is an extension to the Sphinx documentation system which adds support
+for documenting Java projects. It includes a Java domain for writing
+documentation manually and a javasphinx-apidoc utility which will automatically
+generate API documentation from existing Javadoc markup.
+"""
+)
