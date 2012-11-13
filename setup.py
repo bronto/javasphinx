@@ -17,6 +17,7 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries"
         ],
+    install_requires=["javalang>=0.9.1"],
     entry_points={
         'console_scripts': [
             'javasphinx-apidoc = javasphinx.apidoc:main'
