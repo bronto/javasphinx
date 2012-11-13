@@ -1,5 +1,5 @@
 
-import java
+import javalang
 import re
 
 import formatter
@@ -14,7 +14,7 @@ class JavadocRestCompiler(object):
             self.filter = filter
         else:
             # Default, document all non-private members
-            self.filter = lambda node: isinstance(node, java.tree.Declaration) and 'private' not in node.modifiers
+            self.filter = lambda node: isinstance(node, javalang.tree.Declaration) and 'private' not in node.modifiers
 
     def __html_to_rst(self, s):
         """ Convert the psuedo-html commonly found in Javadoc to appropriate ReST. """
@@ -47,7 +47,7 @@ class JavadocRestCompiler(object):
         return s
 
     def __output_doc(self, documented):
-        if not isinstance(documented, java.tree.Documented):
+        if not isinstance(documented, javalang.tree.Documented):
             raise ValueError('node not documented')
 
         output = util.Document()
@@ -55,7 +55,7 @@ class JavadocRestCompiler(object):
         if not documented.documentation:
             return output
 
-        doc = java.javadoc.parse(documented.documentation)
+        doc = javalang.javadoc.parse(documented.documentation)
 
         if doc.description:
             output.add(self.__html_to_rst(doc.description))
@@ -207,7 +207,7 @@ class JavadocRestCompiler(object):
             type_dir.add_option('outertype', outer_type)
         document.add_object(type_dir)
 
-        if isinstance(declaration, java.tree.EnumDeclaration):
+        if isinstance(declaration, javalang.tree.EnumDeclaration):
             enum_constants = list(declaration.body.constants)
             enum_constants.sort(key=lambda c: c.name)
 
@@ -278,11 +278,11 @@ class JavadocRestCompiler(object):
 
         package = ast.package.name
         type_declarations = []
-        for path, node in ast.filter(java.tree.TypeDeclaration):
+        for path, node in ast.filter(javalang.tree.TypeDeclaration):
             if not self.filter(node):
                 continue
 
-            classes = [n.name for n in path if isinstance(n, java.tree.TypeDeclaration)]
+            classes = [n.name for n in path if isinstance(n, javalang.tree.TypeDeclaration)]
             classes.append(node.name)
 
             name = '.'.join(classes)

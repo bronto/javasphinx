@@ -4,7 +4,7 @@ Convert Java syntax tree nodes to string representations.
 
 """
 
-import java
+import javalang
 
 from util import StringBuilder
 
@@ -45,7 +45,7 @@ def output_type(type, output, with_generics=True):
     else:
         dim = ''
 
-    if isinstance(type, java.tree.BasicType):
+    if isinstance(type, javalang.tree.BasicType):
         output.append(type.name)
         output.append(dim)
     else:
@@ -106,29 +106,29 @@ def output_declaration(declaration, output):
     output_modifiers(declaration.modifiers, output)
     output.append(' ')
 
-    if isinstance(declaration, java.tree.ClassDeclaration):
+    if isinstance(declaration, javalang.tree.ClassDeclaration):
         output.append('class ')
-    elif isinstance(declaration, java.tree.EnumDeclaration):
+    elif isinstance(declaration, javalang.tree.EnumDeclaration):
         output.append('enum ')
-    elif isinstance(declaration, java.tree.InterfaceDeclaration):
+    elif isinstance(declaration, javalang.tree.InterfaceDeclaration):
         output.append('interface ')
-    elif isinstance(declaration, java.tree.AnnotationDeclaration):
+    elif isinstance(declaration, javalang.tree.AnnotationDeclaration):
         output.append('@interface ')
 
     output.append(declaration.name)
 
-    if isinstance(declaration, (java.tree.ClassDeclaration, java.tree.InterfaceDeclaration)):
+    if isinstance(declaration, (javalang.tree.ClassDeclaration, javalang.tree.InterfaceDeclaration)):
         output_type_params(declaration.type_parameters, output)
 
-    if isinstance(declaration, java.tree.ClassDeclaration) and declaration.extends:
+    if isinstance(declaration, javalang.tree.ClassDeclaration) and declaration.extends:
         output.append(' extends ')
         output_type(declaration.extends, output)
 
-    if isinstance(declaration, java.tree.InterfaceDeclaration) and declaration.extends:
+    if isinstance(declaration, javalang.tree.InterfaceDeclaration) and declaration.extends:
         output.append(' extends ')
         output_list(output_type, declaration.extends, output, ', ')
 
-    if isinstance(declaration, (java.tree.ClassDeclaration, java.tree.EnumDeclaration)) and declaration.implements:
+    if isinstance(declaration, (javalang.tree.ClassDeclaration, javalang.tree.EnumDeclaration)) and declaration.implements:
         output.append(' implements ')
         output_list(output_type, declaration.implements, output, ', ')
 

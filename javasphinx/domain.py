@@ -13,7 +13,7 @@ from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
 from sphinx.util.docfields import Field, TypedField, GroupedField
 
-import java
+import javalang
 
 import extdoc
 import formatter
@@ -43,7 +43,7 @@ class JavaObject(ObjectDescription):
         return ref
 
     def _build_type_node(self, typ):
-        if isinstance(typ, java.tree.ReferenceType):
+        if isinstance(typ, javalang.tree.ReferenceType):
             if typ.dimensions:
                 dim = '[]' * len(typ.dimensions)
             else:
@@ -166,11 +166,11 @@ class JavaMethod(JavaObject):
 
     def handle_method_signature(self, sig, signode):
         try:
-            member = java.parse.parse_member_signature(sig)
-        except java.parser.JavaSyntaxError:
+            member = javalang.parse.parse_member_signature(sig)
+        except javalang.parser.JavaSyntaxError:
             raise self.error("syntax error in method signature")
 
-        if not isinstance(member, java.tree.MethodDeclaration):
+        if not isinstance(member, javalang.tree.MethodDeclaration):
             raise self.error("expected method declaration")
 
         mods = formatter.output_modifiers(member.modifiers).build()
@@ -211,11 +211,11 @@ class JavaConstructor(JavaObject):
 
     def handle_constructor_signature(self, sig, signode):
         try:
-            member = java.parse.parse_constructor_signature(sig)
-        except java.parser.JavaSyntaxError:
+            member = javalang.parse.parse_constructor_signature(sig)
+        except javalang.parser.JavaSyntaxError:
             raise self.error("syntax error in constructor signature")
 
-        if not isinstance(member, java.tree.ConstructorDeclaration):
+        if not isinstance(member, javalang.tree.ConstructorDeclaration):
             raise self.error("expected constructor declaration")
 
         mods = formatter.output_modifiers(member.modifiers).build()
@@ -250,17 +250,17 @@ class JavaType(JavaObject):
 
     def handle_type_signature(self, sig, signode):
         try:
-            member = java.parse.parse_type_signature(sig)
-        except java.parser.JavaSyntaxError:
+            member = javalang.parse.parse_type_signature(sig)
+        except javalang.parser.JavaSyntaxError:
             raise self.error("syntax error in field signature")
 
-        if isinstance(member, java.tree.ClassDeclaration):
+        if isinstance(member, javalang.tree.ClassDeclaration):
             self.declaration_type = 'class'
-        elif isinstance(member, java.tree.InterfaceDeclaration):
+        elif isinstance(member, javalang.tree.InterfaceDeclaration):
             self.declaration_type = 'interface'
-        elif isinstance(member, java.tree.EnumDeclaration):
+        elif isinstance(member, javalang.tree.EnumDeclaration):
             self.declaration_type = 'enum'
-        elif isinstance(member, java.tree.AnnotationDeclaration):
+        elif isinstance(member, javalang.tree.AnnotationDeclaration):
             self.declaration_type = 'annotation'
         else:
             raise self.error("expected type declaration")
@@ -311,11 +311,11 @@ class JavaType(JavaObject):
 class JavaField(JavaObject):
     def handle_field_signature(self, sig, signode):
         try:
-            member = java.parse.parse_member_signature(sig)
-        except java.parser.JavaSyntaxError:
+            member = javalang.parse.parse_member_signature(sig)
+        except javalang.parser.JavaSyntaxError:
             raise self.error("syntax error in field signature")
 
-        if not isinstance(member, java.tree.FieldDeclaration):
+        if not isinstance(member, javalang.tree.FieldDeclaration):
             raise self.error("expected field declaration")
 
         mods = formatter.output_modifiers(member.modifiers).build()
@@ -336,7 +336,7 @@ class JavaField(JavaObject):
         dim = '[]' * len(declarator.dimensions)
         signode += nodes.Text(dim)
 
-        if declarator.initializer and isinstance(declarator.initializer, java.tree.Literal):
+        if declarator.initializer and isinstance(declarator.initializer, javalang.tree.Literal):
             signode += nodes.Text(' = ' + declarator.initializer.value)
 
         return declarator.name

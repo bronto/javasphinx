@@ -1,5 +1,5 @@
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name = "javasphinx",
@@ -7,7 +7,7 @@ setup(
     version = "0.9.0",
     author = "Chris Thunes",
     author_email = "cthunes@brewtab.com",
-    url = "http://github.com/c2nes/javasphinx",
+    url = "http://github.com/bronto/javasphinx",
     description = "Sphinx extension for documenting Java projects",
     classifiers = [
         "Programming Language :: Python",
@@ -17,6 +17,11 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries"
         ],
+    entry_points={
+        'console_scripts': [
+            'javasphinx-apidoc = javasphinx.apidoc:main'
+            ]
+        },
     long_description = """\
 ==========
 javasphinx

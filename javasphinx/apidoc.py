@@ -4,7 +4,7 @@ import os.path
 
 from optparse import OptionParser
 
-import java
+import javalang
 
 import compiler
 import util
@@ -115,7 +115,7 @@ def generate_documents(source_files):
         source = f.read()
         f.close()
 
-        ast = java.parse.parse(source)
+        ast = javalang.parse.parse(source)
         documents.update(doc_compiler.compile(ast))
 
     packages = set()
@@ -195,8 +195,3 @@ Note: By default this script will not overwrite already created files.""")
 
     if not opts.notoc:
         write_toc(packages, opts)
-
-if __name__ == '__main__':
-    main()
-
-
