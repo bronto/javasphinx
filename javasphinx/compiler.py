@@ -36,12 +36,12 @@ class JavadocRestCompiler(object):
 
         # Reformat all links
         s = re.sub(r'\{@link\s+([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`{0}`'.format(m.group(1).replace('#', '.')),
+                   lambda m: ':java:ref:`%s`' % (m.group(1).replace('#', '.'),),
                    s)
 
         # Reformat all links with labsl
         s = re.sub(r'\{@link\s+([^\s}]+)\s+([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`{0} {1}`'.format(m.group(2), m.group(1).replace('#', '.')),
+                   lambda m: ':java:ref:`%s %s`' % (m.group(2), m.group(1).replace('#', '.')),
                    s)
 
         return s
@@ -62,13 +62,13 @@ class JavadocRestCompiler(object):
             output.clear()
 
         if doc.author:
-            output.add_line(':author: {0}'.format(self.__html_to_rst(doc.author)))
+            output.add_line(':author: %s' % (self.__html_to_rst(doc.author),))
 
         for name, value in doc.params.items():
-            output.add_line(':param {0}: {1}'.format(name, self.__html_to_rst(value)))
+            output.add_line(':param %s: %s' % (name, self.__html_to_rst(value)))
 
         if doc.return_doc:
-            output.add_line(':return: {0}'.format(self.__html_to_rst(doc.return_doc)))
+            output.add_line(':return: %s' % (self.__html_to_rst(doc.return_doc),))
 
         return output
 

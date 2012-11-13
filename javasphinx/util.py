@@ -26,10 +26,10 @@ class Directive(object):
 
     def build(self):
         doc = Document()
-        doc.add_line('.. {0}:: {1}'.format(self.type, self.argument))
+        doc.add_line('.. %s:: %s' % (self.type, self.argument))
 
         for name, value in self.options:
-            doc.add_line('   :{0}: {1}\n'.format(name, value))
+            doc.add_line('   :%s: %s\n' % (name, value))
 
         content = Document()
 
