@@ -33,7 +33,6 @@ class JavaObject(ObjectDescription):
         package = self.env.temp_data.get('java:imports', dict()).get(target, None)
 
         if package:
-
             ref['java:imported'] = True
             ref['java:package'] = package
         else:
@@ -82,7 +81,7 @@ class JavaObject(ObjectDescription):
                 if typ:
                     target = target + '.' + typ.name
                     parts.append(nodes.Text('.', '.'))
-                else:
+                elif dim:
                     parts.append(nodes.Text(dim, dim))
 
             return parts
