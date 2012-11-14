@@ -1,4 +1,6 @@
 
+import cPickle as pickle
+
 import sys
 import os
 import os.path
@@ -116,18 +118,51 @@ def write_documents(documents, sources, opts):
         f.write(doc.build().encode('utf8'))
         f.close()
 
-def generate_documents(source_files):
-    documents = {}
-    sources = {}
-    doc_compiler = compiler.JavadocRestCompiler()
+def get_newer(a, b):
+    if not os.path.exists(a):
+        return b
 
-    for source_file in source_files:
+    if not os.path.exists(b):
+        return a
+
+    a_mtime = int(os.stat(a).st_mtime)
+    b_mtime = int(os.stat(b).st_mtime)
+
+    if a_mtime < b_mtime:
+        return b
+
+    return a
+
+def generate_from_source_file(doc_compiler, source_file, cache_dir):
+    if cache_dir:
+        cache_file = os.path.join(cache_dir, source_file.replace(os.sep, ':')) + '-CACHE'
+        newer = get_newer(source_file, cache_file)
+    else:
+        newer = source_file
+
+    if newer == cache_file:
+        return pickle.load(open(cache_file))
+
+    else:
         f = open(source_file)
         source = f.read()
         f.close()
 
         ast = javalang.parse.parse(source)
-        this_file_documents = doc_compiler.compile(ast)
+        documents = doc_compiler.compile(ast)
+
+        dump_file = open(cache_file, 'w')
+        pickle.dump(documents, dump_file)
+        dump_file.close()
+        return documents
+
+def generate_documents(source_files, cache_dir):
+    documents = {}
+    sources = {}
+    doc_compiler = compiler.JavadocRestCompiler()
+
+    for source_file in source_files:
+        this_file_documents = generate_from_source_file(doc_compiler, source_file, cache_dir)
 
         for fullname in this_file_documents:
             sources[fullname] = source_file
@@ -177,6 +212,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Directory to place all output', default='')
     parser.add_option('-f', '--force', action='store_true', dest='force',
                       help='Overwrite all files')
+    parser.add_option('-c', '--cache-dir', action='store', dest='cache_dir',
+                      help='Directory to stored cachable output')
     parser.add_option('-u', '--update', action='store_true', dest='update',
                       help='Overwrite new and changed files', default=False)
     parser.add_option('-T', '--no-toc', action='store_true', dest='notoc',
@@ -204,10 +241,13 @@ Note: By default this script will not overwrite already created files.""")
     if not os.path.isdir(opts.destdir):
         os.makedirs(opts.destdir)
 
+    if opts.cache_dir and not os.path.isdir(opts.cache_dir):
+        os.makedirs(opts.cache_dir)
+
     excludes = normalize_excludes(rootpath, excludes)
     source_files = find_source_files(rootpath, excludes)
 
-    packages, documents, sources = generate_documents(source_files)
+    packages, documents, sources = generate_documents(source_files, opts.cache_dir)
 
     write_documents(documents, sources, opts)
 
