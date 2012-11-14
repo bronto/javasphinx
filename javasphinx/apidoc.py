@@ -75,7 +75,7 @@ def write_documents(documents, sources, opts):
         # Add to package indexes
         package_contents.setdefault(package, list()).append(filebasename)
 
-        if opts.update:
+        if opts.update and os.path.exists(fullpath):
             # If the destination file is newer than the source file than skip
             # writing it out
             source_mod_time = os.stat(sources[fullname]).st_mtime
