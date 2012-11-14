@@ -88,7 +88,7 @@ class JavaObject(ObjectDescription):
             return parts
         else:
             type_repr = formatter.output_type(typ).build()
-            return nodes.Text(type_repr, type_repr)
+            return [nodes.Text(type_repr, type_repr)]
 
     def _build_type_node_list(self, types):
         parts = self._build_type_node(types[0])
