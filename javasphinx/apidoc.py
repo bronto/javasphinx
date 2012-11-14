@@ -1,5 +1,6 @@
 
 import sys
+import os
 import os.path
 
 from optparse import OptionParser
@@ -46,7 +47,7 @@ def write_toc(packages, opts):
     filename = 'packages.' + opts.suffix
     fullpath = os.path.join(opts.destdir, filename)
 
-    if os.path.exists(fullpath) and not opts.force:
+    if os.path.exists(fullpath) and not (opts.force or opts.update):
         sys.stderr.write(fullpath + ' already exists. Use -f to overwrite.\n')
         sys.exit(1)
 
@@ -54,11 +55,11 @@ def write_toc(packages, opts):
     f.write(doc.build().encode('utf8'))
     f.close()
 
-def write_documents(documents, opts):
+def write_documents(documents, sources, opts):
     package_contents = dict()
 
     # Write individual documents
-    for package, name, document in documents.values():
+    for fullname, (package, name, document) in documents.items():
         package_path = package.replace('.', os.sep)
         filebasename = name.replace('.', '-')
         filename = filebasename + '.' + opts.suffix
@@ -67,12 +68,21 @@ def write_documents(documents, opts):
 
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        elif os.path.exists(fullpath) and not opts.force:
+        elif os.path.exists(fullpath) and not (opts.force or opts.update):
             sys.stderr.write(fullpath + ' already exists. Use -f to overwrite.\n')
             sys.exit(1)
 
         # Add to package indexes
         package_contents.setdefault(package, list()).append(filebasename)
+
+        if opts.update:
+            # If the destination file is newer than the source file than skip
+            # writing it out
+            source_mod_time = os.stat(sources[fullname]).st_mtime
+            dest_mod_time = os.stat(fullpath).st_mtime
+
+            if source_mod_time < dest_mod_time:
+                continue
 
         f = open(fullpath, 'w')
         f.write(document.encode('utf8'))
@@ -98,7 +108,7 @@ def write_documents(documents, opts):
 
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        elif os.path.exists(fullpath) and not opts.force:
+        elif os.path.exists(fullpath) and not (opts.force or opts.update):
             sys.stderr.write(fullpath + ' already exists. Use -f to overwrite.\n')
             sys.exit(1)
 
@@ -108,6 +118,7 @@ def write_documents(documents, opts):
 
 def generate_documents(source_files):
     documents = {}
+    sources = {}
     doc_compiler = compiler.JavadocRestCompiler()
 
     for source_file in source_files:
@@ -116,14 +127,19 @@ def generate_documents(source_files):
         f.close()
 
         ast = javalang.parse.parse(source)
-        documents.update(doc_compiler.compile(ast))
+        this_file_documents = doc_compiler.compile(ast)
+
+        for fullname in this_file_documents:
+            sources[fullname] = source_file
+
+        documents.update(this_file_documents)
 
     packages = set()
 
     for package, _, _ in documents.values():
         packages.add(package)
 
-    return packages, documents
+    return packages, documents, sources
 
 def normalize_excludes(rootpath, excludes):
     f_excludes = []
@@ -161,6 +177,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Directory to place all output', default='')
     parser.add_option('-f', '--force', action='store_true', dest='force',
                       help='Overwrite all files')
+    parser.add_option('-u', '--update', action='store_true', dest='update',
+                      help='Overwrite new and changed files', default=False)
     parser.add_option('-T', '--no-toc', action='store_true', dest='notoc',
                       help='Don\'t create a table of contents file')
     parser.add_option('-s', '--suffix', action='store', dest='suffix',
@@ -189,9 +207,9 @@ Note: By default this script will not overwrite already created files.""")
     excludes = normalize_excludes(rootpath, excludes)
     source_files = find_source_files(rootpath, excludes)
 
-    packages, documents = generate_documents(source_files)
+    packages, documents, sources = generate_documents(source_files)
 
-    write_documents(documents, opts)
+    write_documents(documents, sources, opts)
 
     if not opts.notoc:
         write_toc(packages, opts)
