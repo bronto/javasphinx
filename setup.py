@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name = "javasphinx",
     packages = ["javasphinx"],
-    version = "0.9.3",
+    version = "0.9.4",
     author = "Chris Thunes",
     author_email = "cthunes@brewtab.com",
     url = "http://github.com/bronto/javasphinx",
@@ -17,7 +17,7 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries"
         ],
-    install_requires=["javalang>=0.9.1"],
+    install_requires=["javalang>=0.9.2"],
     entry_points={
         'console_scripts': [
             'javasphinx-apidoc = javasphinx.apidoc:main'
