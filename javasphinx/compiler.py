@@ -44,6 +44,17 @@ class JavadocRestCompiler(object):
                    lambda m: ':java:ref:`%s %s`' % (m.group(2), m.group(1).replace('#', '.')),
                    s)
 
+        def sub_list_items(list_type, ul):
+            return '\n\n%s\n' % (re.sub(r'<li>\s*(.*?)\s*</li>\s*', r'%s \1\n' % (list_type,), ul.strip()),)
+
+        s = re.sub(r'<ul>(.*?)</ul>',
+                   lambda m: sub_list_items('*', m.group(1)),
+                   s)
+
+        s = re.sub(r'<ol>(.*?)</ol>',
+                   lambda m: sub_list_items('#.', m.group(1)),
+                   s)
+
         return s
 
     def __output_doc(self, documented):
