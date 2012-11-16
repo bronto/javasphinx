@@ -34,14 +34,22 @@ class JavadocRestCompiler(object):
         # Format all bolds
         s = re.sub(r'<b>(.*?)</b>', r'**\1**', s)
 
-        # Reformat all links
+        # Format all code
+        s = re.sub(r'<tt>(.*?)</tt>', r'``\1``', s)
+
+        # Reformat all internal links
         s = re.sub(r'\{@link\s+([^\s}]+)\s*\}',
                    lambda m: ':java:ref:`%s`' % (m.group(1).replace('#', '.'),),
                    s)
 
-        # Reformat all links with labsl
+        # Reformat all internal links with labsl
         s = re.sub(r'\{@link\s+([^\s}]+)\s+([^\s}]+)\s*\}',
                    lambda m: ':java:ref:`%s %s`' % (m.group(2), m.group(1).replace('#', '.')),
+                   s)
+
+        # Reformat all HTML links
+        s = re.sub(r'''<a href=(.*?)>(.*?)</a>''',
+                   lambda m: '`%s <%s>`_' % (m.group(2).strip(), m.group(1).strip('"').strip("'")),
                    s)
 
         def sub_list_items(list_type, ul):
@@ -75,7 +83,7 @@ class JavadocRestCompiler(object):
         if doc.author:
             output.add_line(':author: %s' % (self.__html_to_rst(doc.author),))
 
-        for name, value in doc.params.items():
+        for name, value in doc.params:
             output.add_line(':param %s: %s' % (name, self.__html_to_rst(value)))
 
         if doc.return_doc:
