@@ -474,6 +474,10 @@ class JavaDomain(Domain):
                 del self.data['packages'][modname]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+        if target in self.data['packages']:
+            obj = self.data['packages'][target]
+            return make_refnode(builder, fromdocname, obj[0], target, contnode, target)
+
         package = node.get('java:package')
         imported = node.get('java:imported')
         type_context = node.get('java:outertype')

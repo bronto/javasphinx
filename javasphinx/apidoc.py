@@ -95,6 +95,8 @@ def write_documents(documents, sources, opts):
         doc = util.Document()
         doc.add_heading(package, '=')
 
+        doc.add_object(util.Directive('java:package', package))
+
         toc = util.Directive('toctree')
         toc.add_option('maxdepth', '1')
         doc.add_object(toc)
