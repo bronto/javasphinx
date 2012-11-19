@@ -175,6 +175,11 @@ class JavaMethod(JavaObject):
         mods = formatter.output_modifiers(member.modifiers).build()
         signode += nodes.Text(mods + ' ', mods + ' ')
 
+        if  member.type_parameters:
+            type_params = formatter.output_type_params(member.type_parameters).build()
+            signode += nodes.Text(type_params, type_params)
+            signode += nodes.Text(' ', ' ')
+
         rnode = addnodes.desc_type('', '')
         rnode += self._build_type_node(member.return_type)
 
