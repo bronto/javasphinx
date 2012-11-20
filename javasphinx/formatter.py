@@ -1,3 +1,5 @@
+# Copyright (c) 2012 Bronto Software Inc.
+# Licensed under the MIT License
 
 """
 Convert Java syntax tree nodes to string representations.

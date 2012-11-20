@@ -1,3 +1,5 @@
+# Copyright (c) 2012 Bronto Software Inc.
+# Licensed under the MIT License
 
 from domain import JavaDomain
 from extdoc import javadoc_role
