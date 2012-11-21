@@ -40,6 +40,11 @@ class JavadocRestCompiler(object):
         s = re.sub(r'<tt>(.*?)</tt>', r'``\1``', s)
 
         # Reformat all internal links
+        s = re.sub(r'\{@link\s+#([^\s}]+)\s*\}',
+                   lambda m: ':java:ref:`%s`' % (m.group(1),),
+                   s)
+
+        # Reformat all internal links
         s = re.sub(r'\{@link\s+([^\s}]+)\s*\}',
                    lambda m: ':java:ref:`%s`' % (m.group(1).replace('#', '.'),),
                    s)
