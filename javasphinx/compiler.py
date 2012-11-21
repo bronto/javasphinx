@@ -51,7 +51,7 @@ class JavadocRestCompiler(object):
 
         # Reformat all internal links with labsl
         s = re.sub(r'\{@link\s+([^\s}]+)\s+([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`%s %s`' % (m.group(2), m.group(1).replace('#', '.')),
+                   lambda m: ':java:ref:`%s <%s>`' % (m.group(2), m.group(1).replace('#', '.')),
                    s)
 
         # Reformat all HTML links
