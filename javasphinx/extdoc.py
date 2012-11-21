@@ -1,7 +1,8 @@
 # Copyright (c) 2012 Bronto Software Inc.
 # Licensed under the MIT License
 
-from docutils import nodes
+from docutils import nodes, utils
+from sphinx.util.nodes import split_explicit_title
 
 def get_javadoc_ref(app, rawtext, text):
     javadoc_url_map = app.config.javadoc_url_map
@@ -14,6 +15,13 @@ def get_javadoc_ref(app, rawtext, text):
 
     source = None
     package = ''
+    method = None
+
+    if '(' in text:
+        split_point = text.rindex('.', 0, text.index('('))
+        method = text[split_point + 1:]
+        text = text[:split_point]
+        print text, method
 
     for pkg, (baseurl, ext_type) in javadoc_url_map.items():
         if text.startswith(pkg + '.') and len(pkg) > len(package):
@@ -41,18 +49,32 @@ def get_javadoc_ref(app, rawtext, text):
 
     if ext_type == 'javadoc':
         source = baseurl + package.replace('.', '/') + '/' + cls + '.html'
+        if method:
+            source = source + '#' + method
     elif ext_type == 'sphinx':
         source = baseurl + package.replace('.', '/') + '/' + cls.replace('.', '-') + '.html'
+        if method:
+            source = source + '#' + package + '.' + cls + '.' + method
     else:
         raise ValueError('invalid target specifier ' + ext_type)
 
-    return nodes.reference(rawtext, cls, refuri=source)
+    title = '.'.join(filter(None, (package, cls, method)))
+    node = nodes.reference(rawtext, '')
+    node['refuri'] = source
+    node['reftitle'] = title
+
+    return node
 
 def javadoc_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     """ Role for linking to external Javadoc """
 
+    has_explicit_title, title, target = split_explicit_title(text)
+    title = utils.unescape(title)
+    target = utils.unescape(target)
+
     app = inliner.document.settings.env.app
-    ref = get_javadoc_ref(app, rawtext, text)
+    ref = get_javadoc_ref(app, rawtext, target)
+    ref.append(nodes.Text(title, title))
 
     if not ref:
          raise ValueError("no Javadoc source found for %s in javadoc_url_map" % (text,))

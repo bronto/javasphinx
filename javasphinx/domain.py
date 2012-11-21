@@ -408,7 +408,15 @@ class JavaXRefRole(XRefRole):
         refnode['java:outertype'] = '.'.join(env.temp_data.get('java:outertype', list()))
 
         target = target.lstrip('~')
-        package = env.temp_data.get('java:imports', dict()).get(target, None)
+
+        # Strip a method component from the target
+        basetype = target
+        if '(' in basetype:
+            basetype = basetype.partition('(')[0]
+            if '.' in basetype:
+                basetype = basetype.rpartition('.')[0]
+
+        package = env.temp_data.get('java:imports', dict()).get(basetype, None)
 
         if package:
             refnode['java:imported'] = True
@@ -516,7 +524,11 @@ class JavaDomain(Domain):
             fulltarget = package + '.' + target
             ref = extdoc.get_javadoc_ref(self.env, fulltarget, fulltarget)
 
-        return ref
+        if ref:
+            ref.append(contnode)
+            return ref
+        else:
+            return None
 
     def get_objects(self):
         for refname, (docname, type, _) in self.data['objects'].iteritems():
