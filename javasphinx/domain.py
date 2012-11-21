@@ -360,7 +360,6 @@ class JavaPackage(Directive):
     optional_arguments = 0
     final_argument_whitespace = False
     option_spec = {
-        'synopsis': lambda x: x,
         'noindex': directives.flag,
     }
 
@@ -369,7 +368,7 @@ class JavaPackage(Directive):
         package = self.arguments[0].strip()
         noindex = 'noindex' in self.options
         env.temp_data['java:package'] = package
-        env.domaindata['java']['packages'][package] = (env.docname, self.options.get('synopsis', ''))
+        env.domaindata['java']['objects'][package] = (env.docname, 'package', package)
         ret = []
 
         if not noindex:
@@ -463,7 +462,6 @@ class JavaDomain(Domain):
 
     initial_data = {
         'objects': {},  # fullname -> docname, objtype, basename
-        'packages': {}, # name -> docname, synopsis
     }
 
     def clear_doc(self, docname):
@@ -471,45 +469,54 @@ class JavaDomain(Domain):
             if fn == docname:
                 del self.data['objects'][fullname]
 
-        for modname, (fn, _) in self.data['packages'].items():
-            if fn == docname:
-                del self.data['packages'][modname]
-
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
-        if target in self.data['packages']:
-            obj = self.data['packages'][target]
-            return make_refnode(builder, fromdocname, obj[0], target, contnode, target)
-
+        objects = self.data['objects']
         package = node.get('java:package')
         imported = node.get('java:imported')
         type_context = node.get('java:outertype')
 
-        obj = self.data['objects'].get(target, None)
+        # Partial function to make building the response easier
+        make_ref = lambda fullname: make_refnode(builder, fromdocname, objects[fullname][0], fullname, contnode, fullname)
 
-        if not obj and package:
-            obj = self.data['objects'].get(package + '.' + target, None)
+        # Check for fully qualified references
+        if target in objects:
+            return make_ref(target)
 
-        if not obj and package and type_context:
-            obj = self.data['objects'].get(package + '.' + type_context + '.' + target, None)
+        # Try with package name prefixed
+        if package:
+            fullname = package + '.' + target
+            if fullname in objects:
+                return make_ref(fullname)
 
-        if not obj:
-            target = target.partition('(')[0]
-            for fullname, (_, _, basename) in self.data['objects'].items():
-                if basename == target or basename.endswith('.' + target):
-                    target = fullname
-                    obj = self.data['objects'][fullname]
-                    break
+        # Try with package and type prefixed
+        if package and type_context:
+            fullname = package + '.' + type_context + '.' + target
+            if fullname in objects:
+                return make_ref(fullname)
 
-        if not obj:
-            ref = extdoc.get_javadoc_ref(self.env, target, target)
+        # Try to find a matching suffix
+        suffix = '.' + target
+        basename_match = None
+        basename_suffix = suffix.partition('(')[0]
 
-            if not ref and imported:
-                fulltarget = package + '.' + target
-                ref = extdoc.get_javadoc_ref(self.env, fulltarget, fulltarget)
+        for fullname, (_, _, basename) in objects.items():
+            if fullname.endswith(suffix):
+                return make_ref(fullname)
+            elif basename.endswith(basename_suffix):
+                basename_match = fullname
 
-            return ref
+        if basename_match:
+            return make_ref(basename_match)
 
-        return make_refnode(builder, fromdocname, obj[0], target, contnode, target)
+        # Try creating an external documentation reference
+        ref = extdoc.get_javadoc_ref(self.env, target, target)
+
+        # If the target was imported try with the package prefixed
+        if not ref and imported:
+            fulltarget = package + '.' + target
+            ref = extdoc.get_javadoc_ref(self.env, fulltarget, fulltarget)
+
+        return ref
 
     def get_objects(self):
         for refname, (docname, type, _) in self.data['objects'].iteritems():
