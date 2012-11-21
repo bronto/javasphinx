@@ -21,7 +21,6 @@ def get_javadoc_ref(app, rawtext, text):
         split_point = text.rindex('.', 0, text.index('('))
         method = text[split_point + 1:]
         text = text[:split_point]
-        print text, method
 
     for pkg, (baseurl, ext_type) in javadoc_url_map.items():
         if text.startswith(pkg + '.') and len(pkg) > len(package):
