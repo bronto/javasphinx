@@ -11,3 +11,5 @@ generate API documentation from existing Javadoc markup.
 javasphinx is available in the Python Package Index (PyPi) under the name
 *javasphinx* and can be installed using tools such as ``pip`` or
 ``easy_install``.
+
+Documentation for javasphinx is available at http://bronto.github.com/javasphinx/
