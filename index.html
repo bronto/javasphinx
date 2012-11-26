@@ -1,0 +1,307 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>javasphinx User’s Guide &mdash; javasphinx 0.9.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="javasphinx 0.9.7 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="#">javasphinx</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="javasphinx-user-s-guide">
+<h1>javasphinx User&#8217;s Guide<a class="headerlink" href="#javasphinx-user-s-guide" title="Permalink to this headline">¶</a></h1>
+<p>Welcome to the javasphinx user&#8217;s guide.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>javasphinx is a <a class="reference external" href="http://sphinx-doc.org">Sphinx</a> extension that provides a Sphinx <a class="reference external" href="http://sphinx-doc.org/domains.html">domain</a> for documenting
+Java projects and a <tt class="docutils literal"><span class="pre">javasphinx-apidoc</span></tt> command line tool for automatically
+generating API documentation from existing Java source code and Javadoc
+documentation.</p>
+</div>
+<div class="section" id="installing">
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<p>javasphinx is available in the Python Package Index (PyPi) and can be installed
+using tools such as <tt class="docutils literal"><span class="pre">pip</span></tt> or <tt class="docutils literal"><span class="pre">easy_install</span></tt>,</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>pip install javasphinx
+</pre></div>
+</div>
+<p>or,</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>easy_install -U javasphinx
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>To enable javasphinx for your existing Sphinx configuration add <tt class="docutils literal"><span class="pre">'javasphinx'</span></tt>
+to the list of extensions in your conf.py file. javasphinx can be configured to
+cross link to external sources of documentation using the <tt class="docutils literal"><span class="pre">javadoc_url_map</span></tt>
+option,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">javadoc_url_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;com.netflix.curator&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s">&#39;http://netflix.github.com/curator/doc&#39;</span><span class="p">,</span> <span class="s">&#39;javadoc&#39;</span><span class="p">),</span>
+    <span class="s">&#39;org.springframework&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s">&#39;http://static.springsource.org/spring/docs/3.1.x/javadoc-api/&#39;</span><span class="p">,</span> <span class="s">&#39;javadoc&#39;</span><span class="p">),</span>
+    <span class="s">&#39;org.springframework.data.redis&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s">&#39;http://static.springsource.org/spring-data/data-redis/docs/current/api/&#39;</span><span class="p">,</span> <span class="s">&#39;javadoc&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Each key in the map should be a Java package. Each value is a tuple of the form
+<tt class="docutils literal"><span class="pre">(base_url,</span> <span class="pre">doc_type)</span></tt> where <tt class="docutils literal"><span class="pre">base_url</span></tt> is the base URL of the documentation
+source, and <tt class="docutils literal"><span class="pre">doc_type</span></tt> is one of <tt class="docutils literal"><span class="pre">'javadoc'</span></tt> or <tt class="docutils literal"><span class="pre">'sphinx'</span></tt>. Use
+<tt class="docutils literal"><span class="pre">'javadoc'</span></tt> to indicate that the URL points to documentation output by the
+Javadoc tool. Likewise, Use <tt class="docutils literal"><span class="pre">'sphinx'</span></tt> to indicate that the URL points to
+documentation output by javasphinx.</p>
+<p>When comparing referenced types to the list of available packages the longest
+match will be used. Entries for <tt class="docutils literal"><span class="pre">java</span></tt>, <tt class="docutils literal"><span class="pre">javax</span></tt>, <tt class="docutils literal"><span class="pre">org.xml</span></tt>, and
+<tt class="docutils literal"><span class="pre">org.w3c</span></tt> packages pointing to <a class="reference external" href="http://docs.oracle.com/javase/6/docs/api">http://docs.oracle.com/javase/6/docs/api</a> are
+included automatically and do not need to be defined explicitly.</p>
+</div>
+<div class="section" id="java-domain">
+<h2>Java domain<a class="headerlink" href="#java-domain" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="directives">
+<h3>Directives<a class="headerlink" href="#directives" title="Permalink to this headline">¶</a></h3>
+<p>The Java domain uses the name <strong>java</strong> and provides the following directives,</p>
+<dl class="directive">
+<dt id="directive-java:type">
+<tt class="descname">.. java:type::</tt><tt class="descclassname"> type-signature</tt><a class="headerlink" href="#directive-java:type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describe a Java type. The signature can represent either a class, interface,
+enum or annotation declaration.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">param</span></tt> field to document type parameters.</p>
+<p>Example,</p>
+<div class="highlight-rst"><div class="highlight"><pre><span class="p">..</span> <span class="ow">java:type</span><span class="p">::</span> public interface List&lt;E&gt; extends Collection&lt;E&gt;, Iterable&lt;E&gt;
+
+   An ordered collection (also known as a <span class="ge">*sequence*</span>)
+
+   <span class="nc">:param E:</span> <span class="nf">type of item stored by the list</span>
+</pre></div>
+</div>
+<p>produces,</p>
+<blockquote>
+<div><dl class="type">
+<dt id="List">
+public interface <tt class="descname">List</tt>&lt;E&gt; extends Collection&lt;E&gt;, Iterable&lt;E&gt;<a class="headerlink" href="#List" title="Permalink to this definition">¶</a></dt>
+<dd><p>An ordered collection (also known as a <em>sequence</em>)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>E</strong> &#8211; type of item stored by the list</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="directive">
+<dt id="directive-java:field">
+<tt class="descname">.. java:field::</tt><tt class="descclassname"> field-signature</tt><a class="headerlink" href="#directive-java:field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describe a Java field.</p>
+</dd></dl>
+
+<dl class="directive">
+<dt id="directive-java:method">
+<tt class="descname">.. java:method::</tt><tt class="descclassname"> method-signature</tt><a class="headerlink" href="#directive-java:method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describe a Java method.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">param</span></tt> field to document parameters.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">throws</span></tt> field to document exceptions thrown by the method.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">return</span></tt> field to document the return type</p>
+</dd></dl>
+
+<dl class="directive">
+<dt id="directive-java:construct">
+<tt class="descname">.. java:construct::</tt><tt class="descclassname"> constructor-signature</tt><a class="headerlink" href="#directive-java:construct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describe a Java constructor.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">param</span></tt> field to document parameters.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">throws</span></tt> field to document exceptions thrown by the constructor.</p>
+</dd></dl>
+
+<dl class="directive">
+<dt id="directive-java:package">
+<tt class="descname">.. java:package::</tt><tt class="descclassname"> package</tt><a class="headerlink" href="#directive-java:package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide package-level documentation and also sets the active package for the
+type, method, field, constructors, and references that follow.</p>
+<p>Use the <tt class="docutils literal"><span class="pre">:noindex:</span></tt> option if the directive is only being used to specify
+the active package. Only one directive for a given package should exclude
+<tt class="docutils literal"><span class="pre">:noindex:</span></tt>.</p>
+</dd></dl>
+
+<dl class="directive">
+<dt id="directive-java:import">
+<tt class="descname">.. java:import::</tt><tt class="descclassname"> package type</tt><a class="headerlink" href="#directive-java:import" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare the given type as being provided by the given package. This
+information helps javasphinx create cross references for types in type,
+method, and field declarations. It also allows explicit cross references
+(using the <tt class="docutils literal"><span class="pre">java:ref</span></tt> role) to exclude the package qualification.</p>
+</dd></dl>
+
+<p>The method, construct, field, and type directives all accept the following
+standard options,</p>
+<dl class="describe">
+<dt>
+<tt class="descname">package</tt></dt>
+<dd><p>Specify the package the declaration is within. Can be used instead of, or to
+override, a <tt class="docutils literal"><span class="pre">java:package</span></tt> directive.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt>
+<tt class="descname">outertype</tt></dt>
+<dd><p>Specify the class/interface the documented object is contained within. This
+option should be provided for any constructor, method, or field directive
+that isn&#8217;t nested within a corresponding type directive.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="roles">
+<h3>Roles<a class="headerlink" href="#roles" title="Permalink to this headline">¶</a></h3>
+<p>The following roles are provided,</p>
+<dl class="role">
+<dt id="role-java:ref">
+<tt class="descname">:java:ref:</tt><a class="headerlink" href="#role-java:ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>This role can be used to create a cross reference to any object type within
+the Java domain. Aliases for this role include <tt class="docutils literal"><span class="pre">java:meth</span></tt>, <tt class="docutils literal"><span class="pre">java:type</span></tt>,
+<tt class="docutils literal"><span class="pre">java:field</span></tt>, <tt class="docutils literal"><span class="pre">java:package</span></tt>, and <tt class="docutils literal"><span class="pre">java:construct</span></tt>.</p>
+<p>An explicit title can be provided by using the standard <tt class="docutils literal"><span class="pre">title</span> <span class="pre">&lt;reference&gt;</span></tt>
+syntax.</p>
+</dd></dl>
+
+<dl class="role">
+<dt id="role-java:extdoc">
+<tt class="descname">:java:extdoc:</tt><a class="headerlink" href="#role-java:extdoc" title="Permalink to this definition">¶</a></dt>
+<dd><p>This role can be used to explicitly link to an externally documented
+type. The reference must be fully qualified and supports an explicit title
+using the <tt class="docutils literal"><span class="pre">title</span> <span class="pre">&lt;reference&gt;</span></tt> syntax.</p>
+<p>The <tt class="docutils literal"><span class="pre">java:ref</span></tt> role will also create external references as a fall-back if
+it can&#8217;t find a matching local declaration so using this role is not strictly
+necessary.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="javasphinx-apidoc">
+<h2>javasphinx-apidoc<a class="headerlink" href="#javasphinx-apidoc" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">javasphinx-apidoc</span></tt> tool is the counterpoint to the <tt class="docutils literal"><span class="pre">sphinx-apidoc</span></tt> tool
+within the Java domain. It can be used to generate reST source from existing
+Java source code which has been marked up with Javadoc-style comments. The
+generated reST is then processed alongside hand-written documentation by Sphinx.</p>
+<p>At minimum a source and destination directory must be provided. The input
+directory will be scanned for .java files and documentation will be generated
+for all non-private types and members. A separate output file will be generated
+for each type (including inner classes). Each file is put within a directory
+corresponding to its package (with periods replaced by directory separators) and
+with the basename of the file deriving from the type name. Inner types are
+placed in files with a basename using a hyphen to separate inner and outer
+types, e.g. <tt class="docutils literal"><span class="pre">OuterType-InnerType.rst</span></tt>.</p>
+<p>By default <tt class="docutils literal"><span class="pre">javasphinx-apidoc</span></tt> will not override existing files. Two options
+can change this behavior,</p>
+<dl class="option">
+<dt id="cmdoption-f">
+<tt class="descname">-f</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--force</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-f" title="Permalink to this definition">¶</a></dt>
+<dd><p>All existing output files will be rewritten. If a cache directory is
+specified it will be rebuilt.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-u">
+<tt class="descname">-u</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--update</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updated source files will have their corresponding output files
+updated. Unchanged files will be left alone. Most projects will want to use
+this option.</p>
+</dd></dl>
+
+<p>For larger projects it is recommended to use a cache directory. This can speed
+up subsequent runs by an order of magnitude or more. Specify a directory to
+store cached output using the <a class="reference internal" href="#cmdoption-c"><em class="xref std std-option">-c</em></a> option,</p>
+<dl class="option">
+<dt id="cmdoption-c">
+<tt class="descname">-c</tt><tt class="descclassname"></tt><tt class="descclassname">, </tt><tt class="descname">--cache-dir</tt><tt class="descclassname"></tt><a class="headerlink" href="#cmdoption-c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify a directory to cache intermediate documentation representations. This
+directory will be created if it does not already exist.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">javasphinx User&#8217;s Guide</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#installing">Installing</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#java-domain">Java domain</a><ul>
+<li><a class="reference internal" href="#directives">Directives</a></li>
+<li><a class="reference internal" href="#roles">Roles</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#javasphinx-apidoc">javasphinx-apidoc</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="#">javasphinx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Bronto Software Inc..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
