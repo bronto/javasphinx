@@ -140,25 +140,25 @@ def get_newer(a, b):
 def generate_from_source_file(doc_compiler, source_file, cache_dir):
     if cache_dir:
         cache_file = os.path.join(cache_dir, source_file.replace(os.sep, ':')) + '-CACHE'
-        newer = get_newer(source_file, cache_file)
+
+        if get_newer(source_file, cache_file) == cache_file:
+            return pickle.load(open(cache_file))
     else:
-        newer = source_file
+        cache_file = None
 
-    if newer == cache_file:
-        return pickle.load(open(cache_file))
+    f = open(source_file)
+    source = f.read()
+    f.close()
 
-    else:
-        f = open(source_file)
-        source = f.read()
-        f.close()
+    ast = javalang.parse.parse(source)
+    documents = doc_compiler.compile(ast)
 
-        ast = javalang.parse.parse(source)
-        documents = doc_compiler.compile(ast)
-
+    if cache_file:
         dump_file = open(cache_file, 'w')
         pickle.dump(documents, dump_file)
         dump_file.close()
-        return documents
+
+    return documents
 
 def generate_documents(source_files, cache_dir):
     documents = {}
