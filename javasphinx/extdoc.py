@@ -71,11 +71,18 @@ def javadoc_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     title = utils.unescape(title)
     target = utils.unescape(target)
 
+    if not has_explicit_title:
+        target = target.lstrip('~')
+
+        if title[0] == '~':
+            title = title[1:].rpartition('.')[2]
+
     app = inliner.document.settings.env.app
     ref = get_javadoc_ref(app, rawtext, target)
-    ref.append(nodes.Text(title, title))
 
     if not ref:
-         raise ValueError("no Javadoc source found for %s in javadoc_url_map" % (text,))
+         raise ValueError("no Javadoc source found for %s in javadoc_url_map" % (target,))
+
+    ref.append(nodes.Text(title, title))
 
     return [ref], []
