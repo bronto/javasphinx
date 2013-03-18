@@ -46,7 +46,7 @@ def write_toc(packages, opts):
     packages = list(packages)
     packages.sort()
     for package in packages:
-        toc.add_content(os.path.join(package.replace('.', os.sep), 'package-index') + '\n')
+        toc.add_content(package.replace('.', '/') + '/package-index\n')
 
     filename = 'packages.' + opts.suffix
     fullpath = os.path.join(opts.destdir, filename)
