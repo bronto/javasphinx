@@ -150,8 +150,17 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
     source = f.read()
     f.close()
 
-    ast = javalang.parse.parse(source)
-    documents = doc_compiler.compile(ast)
+    try:
+        ast = javalang.parse.parse(source)
+    except Exception:
+        sys.stderr.write('Exception while parsing ' + source_file + '\n')
+        raise
+
+    try:
+        documents = doc_compiler.compile(ast)
+    except Exception:
+        sys.stderr.write('Exception while compiling ' + source_file + '\n')
+        raise
 
     if cache_file:
         dump_file = open(cache_file, 'w')
