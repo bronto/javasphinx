@@ -169,12 +169,15 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
 
     return documents
 
-def generate_documents(source_files, cache_dir):
+def generate_documents(source_files, cache_dir, verbose):
     documents = {}
     sources = {}
     doc_compiler = compiler.JavadocRestCompiler()
 
     for source_file in source_files:
+        if verbose:
+            print 'Processing', source_file
+
         this_file_documents = generate_from_source_file(doc_compiler, source_file, cache_dir)
 
         for fullname in this_file_documents:
@@ -233,6 +236,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Don\'t create a table of contents file')
     parser.add_option('-s', '--suffix', action='store', dest='suffix',
                       help='file suffix (default: rst)', default='rst')
+    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                      help='verbose output')
 
     (opts, args) = parser.parse_args(argv[1:])
 
@@ -260,7 +265,7 @@ Note: By default this script will not overwrite already created files.""")
     excludes = normalize_excludes(rootpath, excludes)
     source_files = find_source_files(rootpath, excludes)
 
-    packages, documents, sources = generate_documents(source_files, opts.cache_dir)
+    packages, documents, sources = generate_documents(source_files, opts.cache_dir, opts.verbose)
 
     write_documents(documents, sources, opts)
 
