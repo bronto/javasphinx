@@ -1,67 +1,9 @@
+# Copyright (c) 2012 Bronto Software Inc.
+# Licensed under the MIT License
 
 import collections
 import re
 from xml.sax.saxutils import escape as html_escape
-
-def convert_0(s):
-    """ Convert the psuedo-html commonly found in Javadoc to appropriate ReST. """
-    marker = '{?}'
-
-    # Join all lines by replacing newlines with spaces and replace all runs of consecutive spaces with a single space
-    s = re.sub(r'\s+', ' ', s.replace('\n', ' '))
-
-    # Remove all closing </p> tags, we ignore them
-    s = s.replace('</p>', '')
-
-    # Create a ReST paragraph break at all <p> tags
-    s = re.sub(r'\s*<p>\s*', '\n\n', s)
-
-    # Format all italics
-    s = re.sub(r'<i>(.*?)</i>', r'*\1*' + marker, s)
-
-    # Format all bolds
-    s = re.sub(r'<b>(.*?)</b>', r'**\1**' + marker, s)
-
-    # Format all code
-    s = re.sub(r'<tt>(.*?)</tt>', r'``\1``' + marker, s)
-    s = re.sub(r'<code>(.*?)</code>', r'``\1``' + marker, s)
-
-    # Reformat all internal links
-    s = re.sub(r'\{@link\s+#([^\s}]+)\s*\}',
-               lambda m: (':java:ref:`%s`' % (m.group(1),)) + marker,
-               s)
-
-    # Reformat all internal links
-    s = re.sub(r'\{@link\s+([^\s}]+)\s*\}',
-               lambda m: (':java:ref:`%s`' % (m.group(1).replace('#', '.'),)) + marker,
-               s)
-
-    # Reformat all internal links with labsl
-    s = re.sub(r'\{@link\s+([^\s}]+)\s+([^\s}]+)\s*\}',
-               lambda m: (':java:ref:`%s <%s>`' % (m.group(2), m.group(1).replace('#', '.'))) + marker,
-               s)
-
-    # Reformat all HTML links
-    s = re.sub(r'''<a href=(.*?)>(.*?)</a>''',
-               lambda m: '`%s <%s>`_' % (m.group(2).strip(), m.group(1).strip('"').strip("'")),
-               s)
-
-    def sub_list_items(list_type, ul):
-        return '\n\n%s\n' % (re.sub(r'<li>\s*(.*?)\s*</li>\s*', r'%s \1\n' % (list_type,), ul.strip()),)
-
-    s = re.sub(r'<ul>(.*?)</ul>',
-               lambda m: sub_list_items('*', m.group(1)),
-               s)
-
-    s = re.sub(r'<ol>(.*?)</ol>',
-               lambda m: sub_list_items('#.', m.group(1)),
-               s)
-
-    # Replace markers
-    s = re.sub(re.escape(marker) + r'''([\s\-.,:;!?\\/'"\)\]}>])''', r'\1', s)
-    s = re.sub(re.escape(marker) + r'(.)', r'\\\1', s)
-
-    return s
 
 from bs4 import BeautifulSoup
 
@@ -414,7 +356,7 @@ def _condition_anchors_pre_html(s):
 
     return s
 
-def convert_1(s_html):
+def convert(s_html):
     if not isinstance(s_html, unicode):
         s_html = unicode(s_html, 'utf8')
 
@@ -436,9 +378,6 @@ def convert_1(s_html):
     result = result.strip()
 
     return result
-
-def convert(s):
-    return convert_1(s)
 
 if __name__ == '__main__':
     import sys
