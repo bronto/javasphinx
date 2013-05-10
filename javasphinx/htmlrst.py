@@ -21,7 +21,7 @@ def header(s, c):
 def inline(f, sub):
     # Seems fishy if our inline markup spans lines. We will instead just return
     # the string as is
-    if sub.find('\n') != -1:
+    if '\n' in sub:
         return sub
 
     # There must be contents for the inline formatter
@@ -51,9 +51,12 @@ def left_justify(s):
 
 def _process(node):
     if isinstance(node, basestring):
-        return re.sub(r'[\s\n]+', ' ', node.strip('\n'))
+        return re.sub(r'[\s\n]+', ' ', node)
 
-    tags = {
+    if node.name == 'p':
+        return separate(_process_children(node))
+
+    simple_tags = {
         'b'      : lambda s: inline(u'**{0}**', s),
         'strong' : lambda s: inline(u'**{0}**', s),
         'i'      : lambda s: inline(u'*{0}*', s),
@@ -63,7 +66,6 @@ def _process(node):
         'sub'    : lambda s: inline(u':sub:`{0}`', s),
         'sup'    : lambda s: inline(u':sup:`{0}`', s),
         'hr'     : lambda s: separate(''), # Transitions not allowed
-        'p'      : lambda s: separate(s),
         'h1'     : lambda s: header(s, '#'),
         'h2'     : lambda s: header(s, '*'),
         'h3'     : lambda s: header(s, '='),
@@ -72,14 +74,8 @@ def _process(node):
         'h6'     : lambda s: header(s, '"')
         }
 
-    text_only = set(('b', 'strong', 'i', 'em', 'tt', 'code', 'sub', 'sup',
-                     'hr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'))
-
-    if node.name in tags:
-        if node.name in text_only:
-            return tags[node.name](_process_text(node))
-        else:
-            return tags[node.name](_process_children(node))
+    if node.name in simple_tags:
+        return simple_tags[node.name](_process_text(node))
 
     if node.name == 'pre':
         text = left_justify(_process_text(node))
@@ -129,7 +125,7 @@ def _process(node):
         s = s.strip()
 
         # If it's multiline clear the end to correcly support nested lists
-        if s.find('\n') != -1:
+        if '\n' in s:
             s = s + '\n\n'
 
         return s
@@ -303,13 +299,13 @@ def _replace_javadoc_tags(tag, f, s):
 def _replace_inline_tags_pre_html(s):
     # Escape contents of {@code ...} tags and put inside of <code></code> tags
     s = _replace_javadoc_tags('code',
-                          lambda m: '<code>%s</code>' % (html_escape(m),),
-                          s)
+                              lambda m: '<code>%s</code>' % (html_escape(m),),
+                              s)
 
     # Escape contents of {@literal ...} tags and put inside of <span></span> tags
     s = _replace_javadoc_tags('literal',
-                          lambda m: '<span>%s</span>' % (html_escape(m),),
-                          s)
+                              lambda m: '<span>%s</span>' % (html_escape(m),),
+                              s)
 
     # Just remove @docRoot tags
     s = _replace_javadoc_tags('docRoot', lambda m: '', s)
