@@ -344,6 +344,10 @@ def _replace_javadoc_link(s):
         target = target[1:]
 
     target = target.replace('#', '.').replace(' ', '').strip()
+
+    # Strip HTML tags from the target
+    target = re.sub(r'<.*?>', '', target)
+
     label = label.strip()
 
     return r'<a href="@%s">%s</a>' % (target, label)
