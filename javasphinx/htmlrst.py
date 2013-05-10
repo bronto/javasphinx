@@ -16,8 +16,6 @@ def separate(s, strip=True):
 
 def header(s, c):
     s = s.strip()
-    #over = under = c * len(s)
-    #return separate('\n'.join((over, s, under)))
     return separate('**' + s + '**')
 
 def inline(f, sub):
