@@ -117,7 +117,7 @@ def _process(node):
 
     if node.name == 'ol':
         items = [_process(n) for n in node.find_all('li', recursive=False)]
-        items = ['# ' + item for item in items]
+        items = ['#. ' + item for item in items]
         items = '\n'.join(items)
         lines = items.split('\n')
         lines = ['  ' + l for l in lines]
