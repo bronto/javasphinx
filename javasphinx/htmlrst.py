@@ -397,30 +397,3 @@ class Converter(object):
         result = result.strip()
 
         return result
-
-
-if __name__ == '__main__':
-    import sys
-    import javalang
-    import time
-
-    f = sys.argv[1]
-    s = open(f).read()
-
-    matches = re.findall(r'/\*\*.*?\*/', s, re.MULTILINE | re.DOTALL)
-
-    for match in matches:
-        doc = javalang.javadoc.parse(match).description
-
-        t = time.time()
-        print doc
-        print '^' * 80
-        print convert_1(doc)
-        print '-' * 80
-        print
-        print
-
-    print
-    print '-' * 80
-    print 'Generated in %.3f ms' % (1000 * (time.time() - t),)
-    print 'Unknown tags:', ' '.join(unknown_tags)
