@@ -3,379 +3,401 @@
 
 import collections
 import re
+
 from xml.sax.saxutils import escape as html_escape
-
 from bs4 import BeautifulSoup
-
-unknown_tags = set()
-
-def separate(s, strip=True):
-    if strip:
-        s = s.strip()
-    return u'\n\n' + s + u'\n\n'
-
-def header(s, c):
-    s = s.strip()
-    return separate('**' + s + '**')
-
-def inline(f, sub):
-    # Seems fishy if our inline markup spans lines. We will instead just return
-    # the string as is
-    if '\n' in sub:
-        return sub
-
-    # There must be contents for the inline formatter
-    if sub.strip() == '':
-        return ''
-
-    if not isinstance(f, unicode):
-        f = unicode(f)
-
-    # Format as inline with escaped spaces on both sides so that docutils
-    # doesn't mistake the markup as literals
-    return '\\ ' + f.format(sub.strip()) + '\\ '
-
-def left_justify(s):
-    lines = s.split('\n')
-    n = 1
-
-    while True:
-        prefixes = set(l[:n] for l in lines)
-
-        if len(prefixes) > 1 or prefixes.pop().strip() != '':
-            break
-
-        n = n + 1
-
-    return '\n'.join(l[n - 1:] for l in lines)
-
-def _process(node):
-    if isinstance(node, basestring):
-        return re.sub(r'[\s\n]+', ' ', node)
-
-    if node.name == 'p':
-        return separate(_process_children(node))
-
-    simple_tags = {
-        'b'      : lambda s: inline(u'**{0}**', s),
-        'strong' : lambda s: inline(u'**{0}**', s),
-        'i'      : lambda s: inline(u'*{0}*', s),
-        'em'     : lambda s: inline(u'*{0}*', s),
-        'tt'     : lambda s: inline(u'``{0}``', s),
-        'code'   : lambda s: inline(u'``{0}``', s),
-        'sub'    : lambda s: inline(u':sub:`{0}`', s),
-        'sup'    : lambda s: inline(u':sup:`{0}`', s),
-        'hr'     : lambda s: separate(''), # Transitions not allowed
-        'h1'     : lambda s: header(s, '#'),
-        'h2'     : lambda s: header(s, '*'),
-        'h3'     : lambda s: header(s, '='),
-        'h4'     : lambda s: header(s, '-'),
-        'h5'     : lambda s: header(s, '^'),
-        'h6'     : lambda s: header(s, '"')
-        }
-
-    if node.name in simple_tags:
-        return simple_tags[node.name](_process_text(node))
-
-    if node.name == 'pre':
-        text = left_justify(_process_text(node))
-        lines = text.split('\n')
-        lines = ['   ' + l for l in lines]
-        return separate('.. parsed-literal::') + separate('\n'.join(lines), False)
-
-    if node.name == 'a':
-        if 'name' in node.attrs:
-            return separate('.. _' + node['name'] + ':')
-        elif 'href' in node.attrs:
-            target = node['href']
-
-            if target.startswith('#'):
-                label = re.sub(r'[\s\n]+', ' ', _process_text(node).strip('\n'))
-                return inline(u':ref:`{{0}} <{0}>`'.format(target[1:]), label)
-            elif target.startswith('@'):
-                label = re.sub(r'[\s\n]+', ' ', _process_text(node).strip('\n'))
-                if label:
-                    return inline(u':java:ref:`{{0}} <{0}>`'.format(target[1:]), label)
-                else:
-                    return inline(u':java:ref:`{0}`', target[1:])
-            else:
-                label = re.sub(r'[\s\n]+', ' ', _process_text(node).strip('\n'))
-                return inline(u'`{{0}} <{0}>`_'.format(target), label)
-
-    if node.name == 'ul':
-        items = [_process(n) for n in node.find_all('li', recursive=False)]
-        items = ['* ' + item for item in items]
-        items = '\n'.join(items)
-        lines = items.split('\n')
-        lines = ['  ' + l for l in lines]
-
-        return separate('..') + separate('\n'.join(lines), False)
-
-    if node.name == 'ol':
-        items = [_process(n) for n in node.find_all('li', recursive=False)]
-        items = ['#. ' + item for item in items]
-        items = '\n'.join(items)
-        lines = items.split('\n')
-        lines = ['  ' + l for l in lines]
-
-        return separate('..') + separate('\n'.join(lines), False)
-
-    if node.name == 'li':
-        s = _process_children(node)
-        s = s.strip()
-
-        # If it's multiline clear the end to correcly support nested lists
-        if '\n' in s:
-            s = s + '\n\n'
-
-        return s
-
-    if node.name == 'table':
-        return _process_table(node)
-
-    unknown_tags.add(node.name)
-
-    return _process_children(node)
 
 Cell = collections.namedtuple('Cell', ['type', 'rowspan', 'colspan', 'contents'])
 
-def _get_table_rows(table):
-    return table.find_all('tr', recursive=False)
+class Converter(object):
+    def __init__(self):
+        self._unknown_tags = set()
+        self._clear = '\n\n..\n\n'
 
-def _get_table_cells(row):
-    cells = []
+        # Regular expressions
+        self._preprocess_anchors = re.compile(r'<a\s+name\s*=\s*["\']?(.+?)["\']?\s*>')
+        self._post_process_empty_lines = re.compile(r'^\s+$', re.MULTILINE)
+        self._post_process_compress_lines = re.compile(r'\n{3,}')
+        self._whitespace_with_newline = re.compile(r'[\s\n]+')
+        self._whitespace = re.compile(r'\s+')
+        self._html_tag = re.compile(r'<.*?>')
 
-    for c in row.contents:
-        if getattr(c, 'name', 'str') in ('td', 'th'):
-            cells.append(c)
+        self._preprocess_entity = re.compile(r'&(nbsp|lt|gt|amp)([^;]|[\n])')
 
-    return cells
+    # --------------------------------------------------------------------------
+    # ---- reST Utility Methods ----
 
-def _process_cell(cell, row_num):
-    cell_type = cell.name
-    rowspan = int(cell.attrs.get('rowspan', 1))
-    colspan = int(cell.attrs.get('colspan', 1))
-    contents =_process_children(cell)
+    def _unicode(self, s):
+        if isinstance(s, unicode):
+            return s
+        else:
+            return unicode(s, 'utf8')
 
-    if cell_type == 'th' and row_num > 0:
-        contents = inline(u'**{0}**', contents)
+    def _separate(self, s):
+        return u'\n\n' + s + u'\n\n'
 
-    return Cell(cell_type, rowspan, colspan, contents)
+    def _escape_inline(self, s):
+        return '\\ ' + s + '\\ '
 
-def _process_table(node):
-    rows = []
+    def _inline(self, tag, s):
+        # Seems fishy if our inline markup spans lines. We will instead just return
+        # the string as is
+        if '\n' in s:
+            return s
 
-    for tr in _get_table_rows(node):
-        row = []
-        for cell in _get_table_cells(tr):
-            row.append(_process_cell(cell, len(rows)))
-        rows.append(row)
+        s = s.strip()
 
-    normalized = []
+        if not s:
+            return s
 
-    width = max(sum(c.colspan for c in row) for row in rows) if rows else 0
+        return self._escape_inline(tag + s.strip() + tag)
 
-    for row in rows:
-        row_width = sum(c.colspan for c in row)
+    def _role(self, role, s, label=None):
+        if label:
+            return self._escape_inline(':%s:`%s <%s>`' % (role, label, s))
+        else:
+            return self._escape_inline(':%s:`%s`' % (role, s))
 
-        if row_width < width:
-            cell_type = row[-1].type if row else 'td'
-            row.append(Cell(cell_type, width - row_width, 1, ''))
+    def _directive(self, directive, body=None):
+        header = '\n\n.. %s::\n\n' % (directive,)
 
-    col_widths = [0] * width
-    row_heights = [0] * len(rows)
+        if body:
+            return header + self._left_justify(body, 3) + '\n\n'
+        else:
+            return header + '\n'
 
-    i = 0
+    def _hyperlink(self, target, label):
+        return self._escape_inline('`%s <%s>`_' % (label, target))
 
-    for row in rows:
-        j = 0
-        for cell in row:
-            current_w = sum(col_widths[j:j + cell.colspan])
-            required_w = max(len(l) for l in cell.contents.split('\n'))
+    def _listing(self, marker, items):
+        items = [self._left_justify(item, len(marker) + 1) for item in items]
+        items = [marker + item[len(marker):] for item in items]
+        return self._separate('..') + self._separate('\n'.join(items))
 
-            if required_w > current_w:
-                additional = required_w - current_w
-                col_widths[j] += additional - (cell.colspan - 1) * (additional // cell.colspan)
-                for jj in range(j + 1, j + cell.colspan):
-                    col_widths[jj] += (additional // cell.colspan)
+    def _left_justify(self, s, indent=0):
+        lines = [l.rstrip() for l in s.split('\n')]
+        indents = [len(l) - len(l.lstrip()) for l in lines if l]
 
-            current_h = row_heights[i]
-            required_h = len(cell.contents.split('\n'))
+        if not indents:
+            return s
 
-            if required_h > current_h:
-                row_heights[i] = required_h
+        shift = indent - min(indents)
 
-            j += cell.colspan
-        i += 1
+        if shift < 0:
+            return '\n'.join(l[-shift:] for l in lines)
+        else:
+            prefix = ' ' * shift
+            return '\n'.join(prefix + l for l in lines)
 
-    row_sep = '+' + '+'.join('-' * (l + 2) for l in col_widths) + '+'
-    header_sep = '+' + '+'.join('=' * (l + 2) for l in col_widths) + '+'
-    lines = [row_sep]
+    def _compress_whitespace(self, s, replace=' ', newlines=True):
+        if newlines:
+            return self._whitespace_with_newline.sub(replace, s)
+        else:
+            return self._whitespace.sub(replace, s)
 
-    i = 0
+    # --------------------------------------------------------------------------
+    # ---- DOM Tree Processing ----
 
-    for row in rows:
-        for y in range(0, row_heights[i]):
-            line = []
+    def _process_table_cells(self, table):
+        """ Compile all the table cells.
+
+        Returns a list of rows. The rows may have different lengths because of
+        column spans.
+
+        """
+
+        rows = []
+
+        for i, tr in enumerate(table.find_all('tr')):
+            row = []
+
+            for c in tr.contents:
+                cell_type = getattr(c, 'name', None)
+
+                if cell_type not in ('td', 'th'):
+                    continue
+
+                rowspan = int(c.attrs.get('rowspan', 1))
+                colspan = int(c.attrs.get('colspan', 1))
+                contents = self._process_children(c).strip()
+
+                if cell_type == 'th' and i > 0:
+                    contents = self._inline('**', contents)
+
+                row.append(Cell(cell_type, rowspan, colspan, contents))
+
+            rows.append(row)
+
+        return rows
+
+    def _process_table(self, node):
+        rows = self._process_table_cells(node)
+
+        if not rows:
+            return ''
+
+        table_num_columns = max(sum(c.colspan for c in row) for row in rows)
+
+        normalized = []
+
+        for row in rows:
+            row_num_columns = sum(c.colspan for c in row)
+
+            if row_num_columns < table_num_columns:
+                cell_type = row[-1].type if row else 'td'
+                row.append(Cell(cell_type, 1, table_num_columns - row_num_columns, ''))
+
+        col_widths = [0] * table_num_columns
+        row_heights = [0] * len(rows)
+
+        for i, row in enumerate(rows):
             j = 0
-            for c in row:
-                w = sum(n + 3 for n in col_widths[j:j+c.colspan]) - 2
-                h = row_heights[i]
+            for cell in row:
+                current_w = sum(col_widths[j:j + cell.colspan])
+                required_w = max(len(l) for l in cell.contents.split('\n'))
 
-                line.append('| ')
-                cell_lines = c.contents.split('\n')
-                content = cell_lines[y] if y < len(cell_lines) else ''
-                line.append(content.ljust(w))
-                j += 1
-            line.append('|')
-            lines.append(''.join(line))
+                if required_w > current_w:
+                    additional = required_w - current_w
+                    col_widths[j] += additional - (cell.colspan - 1) * (additional // cell.colspan)
+                    for jj in range(j + 1, j + cell.colspan):
+                        col_widths[jj] += (additional // cell.colspan)
 
-        if i == 0 and all(c.type == 'th' for c in row):
-            lines.append(header_sep)
+                current_h = row_heights[i]
+                required_h = len(cell.contents.split('\n'))
+
+                if required_h > current_h:
+                    row_heights[i] = required_h
+
+                j += cell.colspan
+
+        row_sep = '+' + '+'.join('-' * (l + 2) for l in col_widths) + '+'
+        header_sep = '+' + '+'.join('=' * (l + 2) for l in col_widths) + '+'
+        lines = [row_sep]
+
+        for i, row in enumerate(rows):
+            for y in range(0, row_heights[i]):
+                line = []
+                j = 0
+                for c in row:
+                    w = sum(n + 3 for n in col_widths[j:j+c.colspan]) - 2
+                    h = row_heights[i]
+
+                    line.append('| ')
+                    cell_lines = c.contents.split('\n')
+                    content = cell_lines[y] if y < len(cell_lines) else ''
+                    line.append(content.ljust(w))
+
+                    j += c.colspan
+
+                line.append('|')
+                lines.append(''.join(line))
+
+            if i == 0 and all(c.type == 'th' for c in row):
+                lines.append(header_sep)
+            else:
+                lines.append(row_sep)
+
+        return self._separate('\n'.join(lines))
+
+    def _process_children(self, node):
+        parts = []
+        is_newline = False
+
+        for c in node.contents:
+            part = self._process(c)
+
+            if is_newline:
+                part = part.lstrip()
+
+            if part:
+                parts.append(part)
+                is_newline = part.endswith('\n')
+
+        return ''.join(parts)
+
+    def _process_text(self, node):
+        return ''.join(node.strings)
+
+    def _process(self, node):
+        if isinstance(node, basestring):
+            return self._compress_whitespace(node)
+
+        simple_tags = {
+            'b'      : lambda s: self._inline('**', s),
+            'strong' : lambda s: self._inline('**', s),
+            'i'      : lambda s: self._inline('*', s),
+            'em'     : lambda s: self._inline('*', s),
+            'tt'     : lambda s: self._inline('``', s),
+            'code'   : lambda s: self._inline('``', s),
+            'h1'     : lambda s: self._inline('**', s),
+            'h2'     : lambda s: self._inline('**', s),
+            'h3'     : lambda s: self._inline('**', s),
+            'h4'     : lambda s: self._inline('**', s),
+            'h5'     : lambda s: self._inline('**', s),
+            'h6'     : lambda s: self._inline('**', s),
+            'sub'    : lambda s: self._role('sub', s),
+            'sup'    : lambda s: self._role('sup', s),
+            'hr'     : lambda s: self._separate('') # Transitions not allowed
+            }
+
+        if node.name in simple_tags:
+            return simple_tags[node.name](self._process_text(node))
+
+        if node.name == 'p':
+            return self._separate(self._process_children(node).strip())
+
+        if node.name == 'pre':
+            return self._directive('parsed-literal', self._process_text(node))
+
+        if node.name == 'a':
+            if 'name' in node.attrs:
+                return self._separate('.. _' + node['name'] + ':')
+            elif 'href' in node.attrs:
+                target = node['href']
+                label = self._compress_whitespace(self._process_text(node).strip('\n'))
+
+                if target.startswith('#'):
+                    return self._role('ref', target[1:], label)
+                elif target.startswith('@'):
+                    return self._role('java:ref', target[1:], label)
+                else:
+                    return self._hyperlink(target, label)
+
+        if node.name == 'ul':
+            items = [self._process(n) for n in node.find_all('li', recursive=False)]
+            return self._listing('*', items)
+
+        if node.name == 'ol':
+            items = [self._process(n) for n in node.find_all('li', recursive=False)]
+            return self._listing('#.', items)
+
+        if node.name == 'li':
+            s = self._process_children(node)
+            s = s.strip()
+
+            # If it's multiline clear the end to correcly support nested lists
+            if '\n' in s:
+                s = s + '\n\n'
+
+            return s
+
+        if node.name == 'table':
+            return self._process_table(node)
+
+        self._unknown_tags.add(node.name)
+
+        return self._process_children(node)
+
+    # --------------------------------------------------------------------------
+    # ---- HTML Preprocessing ----
+
+    def _preprocess_inline_javadoc_replace(self, tag, f, s):
+        parts = []
+
+        start = '{@' + tag
+        start_length = len(start)
+
+        i = s.find(start)
+        j = 0
+
+        while i != -1:
+            parts.append(s[j:i])
+
+            # Find a closing bracket such that the brackets are balanced between
+            # them. This is necessary since code examples containing { and } are
+            # commonly wrapped in {@code ...} tags
+
+            j = s.index('}', i + start_length) + 1
+            while s.count('{', i, j) != s.count('}', i, j):
+                j = s.index('}', j) + 1
+
+            parts.append(f(s[i + start_length:j - 1].strip()))
+            i = s.find(start, j)
+
+        parts.append(s[j:])
+
+        return ''.join(parts)
+
+    def _preprocess_replace_javadoc_link(self, s):
+        s = self._compress_whitespace(s)
+
+        target = None
+        label = ''
+
+        if ' ' not in s:
+            target = s
         else:
-            lines.append(row_sep)
+            i = s.find(' ')
 
-        i += 1
+            while s.count('(', 0, i) != s.count(')', 0, i):
+                i = s.find(' ', i + 1)
 
-    return separate('\n'.join(lines))
+                if i == -1:
+                    i = len(s)
+                    break
 
-def _smart_join(parts):
-    new_parts = []
-    clear = False
+            target = s[:i]
+            label = s[i:]
 
-    for part in parts:
-        if not part:
-            continue
+        if target[0] == '#':
+            target = target[1:]
 
-        if clear:
-            new_parts.append(part.lstrip())
-        else:
-            new_parts.append(part)
+        target = target.replace('#', '.').replace(' ', '').strip()
 
-        clear = (part[-1] == '\n')
+        # Strip HTML tags from the target
+        target = self._html_tag.sub('', target)
 
-    return ''.join(new_parts)
+        label = label.strip()
 
-def _process_children(node):
-    parts = []
+        return '<a href="@%s">%s</a>' % (target, label)
 
-    for c in node.contents:
-        parts.append(_process(c))
-    out = _smart_join(parts)
+    def _preprocess_close_anchor_tags(self, s):
+        # Add closing tags to all anchors so they are better handled by the parser
+        return self._preprocess_anchors.sub(r'<a name="\1"></a>', s)
 
-    return out
+    def _preprocess_fix_entities(self, s):
+        return self._preprocess_entity.sub(r'&\1;\2', s)
 
-def _process_text(node):
-    return ''.join(node.strings)
+    def _preprocess(self, s_html):
+        to_tag = lambda t: lambda m: '<%s>%s</%s>' % (t, html_escape(m), t)
+        s_html = self._preprocess_inline_javadoc_replace('code', to_tag('code'), s_html)
+        s_html = self._preprocess_inline_javadoc_replace('literal', to_tag('span'), s_html)
+        s_html = self._preprocess_inline_javadoc_replace('docRoot', lambda m: '', s_html)
+        s_html = self._preprocess_inline_javadoc_replace('linkplain', self._preprocess_replace_javadoc_link, s_html)
+        s_html = self._preprocess_inline_javadoc_replace('link', self._preprocess_replace_javadoc_link, s_html)
 
-def _find_javadoc_tag_end(s, i):
-    j = i + 1
+        # Make sure all anchor tags are closed
+        s_html = self._preprocess_close_anchor_tags(s_html)
 
-    while s.count('{', i, j) != s.count('}', i, j):
-        j = s.find('}', j) + 1
+        # Fix up some entitities without closing ;
+        s_html = self._preprocess_fix_entities(s_html)
 
-        if j == 0:
-            return len(s)
+        return s_html
 
-    return j
+    # --------------------------------------------------------------------------
+    # ---- Conversion entry point ----
 
-def _replace_javadoc_tags(tag, f, s):
-    parts = []
-    search = '{@' + tag
+    def convert(self, s_html):
+        if not isinstance(s_html, unicode):
+            s_html = unicode(s_html, 'utf8')
 
-    i = s.find(search)
-    j = 0
+        s_html = self._preprocess(s_html)
 
-    while i != -1:
-        parts.append(s[j:i])
+        if not s_html.strip():
+            return ''
 
-        j = _find_javadoc_tag_end(s, i)
-        parts.append(f(s[i + len(search):j - 1].strip()))
-        i = s.find(search, j)
+        soup = BeautifulSoup(s_html, 'lxml')
+        top = soup.html.body
 
-    parts.append(s[j:])
-    return ''.join(parts)
+        result = self._process_children(top)
 
-def _replace_inline_tags_pre_html(s):
-    # Escape contents of {@code ...} tags and put inside of <code></code> tags
-    s = _replace_javadoc_tags('code',
-                              lambda m: '<code>%s</code>' % (html_escape(m),),
-                              s)
+        # Post processing
+        result = self._post_process_empty_lines.sub('', result)
+        result = self._post_process_compress_lines.sub('\n\n', result)
+        result = result.strip()
 
-    # Escape contents of {@literal ...} tags and put inside of <span></span> tags
-    s = _replace_javadoc_tags('literal',
-                              lambda m: '<span>%s</span>' % (html_escape(m),),
-                              s)
+        return result
 
-    # Just remove @docRoot tags
-    s = _replace_javadoc_tags('docRoot', lambda m: '', s)
-
-    # Precondition internal links
-    s = _replace_javadoc_tags('linkplain', _replace_javadoc_link, s)
-    s = _replace_javadoc_tags('link', _replace_javadoc_link, s)
-
-    return s
-
-def _replace_javadoc_link(s):
-    s = s.strip().replace('\t', ' ').replace('\n', ' ')
-    target = None
-    label = ''
-
-    if ' ' not in s:
-        target = s
-    else:
-        i = s.find(' ')
-
-        while s.count('(', 0, i) != s.count(')', 0, i):
-            i = s.find(' ', i + 1)
-
-            if i == -1:
-                i = len(s)
-                break
-
-        target = s[:i]
-        label = s[i:]
-
-    if target[0] == '#':
-        target = target[1:]
-
-    target = target.replace('#', '.').replace(' ', '').strip()
-
-    # Strip HTML tags from the target
-    target = re.sub(r'<.*?>', '', target)
-
-    label = label.strip()
-
-    return r'<a href="@%s">%s</a>' % (target, label)
-
-def _condition_anchors_pre_html(s):
-    # Add closing tags to all anchors so they are better handled by the parser
-    s = re.sub(r'<a\s+name\s*=\s*["\']?(.+?)["\']?\s*>', r'<a name="\1"></a>', s)
-
-    return s
-
-def convert(s_html):
-    if not isinstance(s_html, unicode):
-        s_html = unicode(s_html, 'utf8')
-
-    # Convert Javadoc tags to psuedo-HTML
-    s_html = _replace_inline_tags_pre_html(s_html)
-
-    # Make sure all anchor tags are closed
-    s_html = _condition_anchors_pre_html(s_html)
-
-    if not s_html.strip():
-        return ''
-
-    soup = BeautifulSoup(s_html, 'lxml')
-    top = soup.html.body
-
-    result = _process_children(top)
-    result = re.compile(r'^\s+$', re.MULTILINE).sub('', result)
-    result = re.compile(r'\n{3,}').sub('\n\n', result)
-    result = result.strip()
-
-    return result
 
 if __name__ == '__main__':
     import sys

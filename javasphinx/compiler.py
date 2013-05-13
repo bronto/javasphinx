@@ -19,8 +19,10 @@ class JavadocRestCompiler(object):
             # Default, document all non-private members
             self.filter = lambda node: isinstance(node, javalang.tree.Declaration) and 'private' not in node.modifiers
 
+        self.converter = htmlrst.Converter()
+
     def __html_to_rst(self, s):
-        return htmlrst.convert(s)
+        return self.converter.convert(s)
 
     def __output_doc(self, documented):
         if not isinstance(documented, javalang.tree.Documented):
