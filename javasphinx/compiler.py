@@ -6,6 +6,7 @@ import re
 
 import formatter
 import util
+import htmlrst
 
 class JavadocRestCompiler(object):
     """ Javadoc to ReST compiler. Builds ReST documentation from a Java syntax
@@ -18,59 +19,10 @@ class JavadocRestCompiler(object):
             # Default, document all non-private members
             self.filter = lambda node: isinstance(node, javalang.tree.Declaration) and 'private' not in node.modifiers
 
+        self.converter = htmlrst.Converter()
+
     def __html_to_rst(self, s):
-        """ Convert the psuedo-html commonly found in Javadoc to appropriate ReST. """
-
-        # Join all lines by replacing newlines with spaces and replace all runs of consecutive spaces with a single space
-        s = re.sub(r'\s+', ' ', s.replace('\n', ' '))
-
-        # Remove all closing </p> tags, we ignore them
-        s = s.replace('</p>', '')
-
-        # Create a ReST paragraph break at all <p> tags
-        s = re.sub(r'\s*<p>\s*', '\n\n', s)
-
-        # Format all italics
-        s = re.sub(r'<i>(.*?)</i>', r'*\1*', s)
-
-        # Format all bolds
-        s = re.sub(r'<b>(.*?)</b>', r'**\1**', s)
-
-        # Format all code
-        s = re.sub(r'<tt>(.*?)</tt>', r'``\1``', s)
-
-        # Reformat all internal links
-        s = re.sub(r'\{@link\s+#([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`%s`' % (m.group(1),),
-                   s)
-
-        # Reformat all internal links
-        s = re.sub(r'\{@link\s+([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`%s`' % (m.group(1).replace('#', '.'),),
-                   s)
-
-        # Reformat all internal links with labsl
-        s = re.sub(r'\{@link\s+([^\s}]+)\s+([^\s}]+)\s*\}',
-                   lambda m: ':java:ref:`%s <%s>`' % (m.group(2), m.group(1).replace('#', '.')),
-                   s)
-
-        # Reformat all HTML links
-        s = re.sub(r'''<a href=(.*?)>(.*?)</a>''',
-                   lambda m: '`%s <%s>`_' % (m.group(2).strip(), m.group(1).strip('"').strip("'")),
-                   s)
-
-        def sub_list_items(list_type, ul):
-            return '\n\n%s\n' % (re.sub(r'<li>\s*(.*?)\s*</li>\s*', r'%s \1\n' % (list_type,), ul.strip()),)
-
-        s = re.sub(r'<ul>(.*?)</ul>',
-                   lambda m: sub_list_items('*', m.group(1)),
-                   s)
-
-        s = re.sub(r'<ol>(.*?)</ol>',
-                   lambda m: sub_list_items('#.', m.group(1)),
-                   s)
-
-        return s
+        return self.converter.convert(s)
 
     def __output_doc(self, documented):
         if not isinstance(documented, javalang.tree.Documented):
