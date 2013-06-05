@@ -14,7 +14,7 @@ import javalang
 import compiler
 import util
 
-def find_source_files(rootpath, excludes):
+def find_source_files(input_path, excludes):
     """ Get a list of filenames for all Java source files within the given
     directory.
 
@@ -22,9 +22,9 @@ def find_source_files(rootpath, excludes):
 
     java_files = []
 
-    rootpath = os.path.normpath(os.path.abspath(rootpath))
+    input_path = os.path.normpath(os.path.abspath(input_path))
 
-    for dirpath, dirnames, filenames in os.walk(rootpath):
+    for dirpath, dirnames, filenames in os.walk(input_path):
         if is_excluded(dirpath, excludes):
             del dirnames[:]
             continue
@@ -236,6 +236,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Don\'t create a table of contents file')
     parser.add_option('-s', '--suffix', action='store', dest='suffix',
                       help='file suffix (default: rst)', default='rst')
+    parser.add_option('-I', '--include', action='append', dest='includes',
+                      help='Additional input paths to scan', default=[])
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='verbose output')
 
@@ -246,15 +248,19 @@ Note: By default this script will not overwrite already created files.""")
 
     rootpath, excludes = args[0], args[1:]
 
+    input_paths = opts.includes
+    input_paths.append(rootpath)
+
     if not opts.destdir:
         parser.error('An output directory is required.')
 
     if opts.suffix.startswith('.'):
         opts.suffix = opts.suffix[1:]
 
-    if not os.path.isdir(rootpath):
-        sys.stderr.write('%s is not a directory.\n' % (rootpath,))
-        sys.exit(1)
+    for input_path in input_paths:
+        if not os.path.isdir(input_path):
+            sys.stderr.write('%s is not a directory.\n' % (input_path,))
+            sys.exit(1)
 
     if not os.path.isdir(opts.destdir):
         os.makedirs(opts.destdir)
@@ -263,7 +269,10 @@ Note: By default this script will not overwrite already created files.""")
         os.makedirs(opts.cache_dir)
 
     excludes = normalize_excludes(rootpath, excludes)
-    source_files = find_source_files(rootpath, excludes)
+    source_files = []
+
+    for input_path in input_paths:
+        source_files.extend(find_source_files(input_path, excludes))
 
     packages, documents, sources = generate_documents(source_files, opts.cache_dir, opts.verbose)
 
