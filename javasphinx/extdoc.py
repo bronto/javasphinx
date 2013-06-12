@@ -8,10 +8,14 @@ def get_javadoc_ref(app, rawtext, text):
     javadoc_url_map = app.config.javadoc_url_map
 
     # Add default sources
-    javadoc_url_map["java"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
-    javadoc_url_map["javax"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
-    javadoc_url_map["org.xml"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
-    javadoc_url_map["org.w3c"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+    if not javadoc_url_map.get("java"):
+        javadoc_url_map["java"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+    if not javadoc_url_map.get("javax"):
+        javadoc_url_map["javax"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+    if not javadoc_url_map.get("org.xml"):
+        javadoc_url_map["org.xml"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+    if not javadoc_url_map.get("org.w3c"):
+        javadoc_url_map["org.w3c"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
 
     source = None
     package = ''
