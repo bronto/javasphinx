@@ -21,6 +21,35 @@ import extdoc
 import formatter
 import util
 
+# Classes in java.lang. These are available without an import.
+java_dot_lang = set([
+    'AbstractMethodError', 'Appendable', 'ArithmeticException',
+    'ArrayIndexOutOfBoundsException', 'ArrayStoreException', 'AssertionError',
+    'AutoCloseable', 'Boolean', 'BootstrapMethodError', 'Byte', 'Character',
+    'CharSequence', 'Class', 'ClassCastException', 'ClassCircularityError',
+    'ClassFormatError', 'ClassLoader', 'ClassNotFoundException', 'ClassValue',
+    'Cloneable', 'CloneNotSupportedException', 'Comparable', 'Compiler',
+    'Deprecated', 'Double', 'Enum', 'EnumConstantNotPresentException', 'Error',
+    'Exception', 'ExceptionInInitializerError', 'Float', 'IllegalAccessError',
+    'IllegalAccessException', 'IllegalArgumentException',
+    'IllegalMonitorStateException', 'IllegalStateException',
+    'IllegalThreadStateException', 'IncompatibleClassChangeError',
+    'IndexOutOfBoundsException', 'InheritableThreadLocal', 'InstantiationError',
+    'InstantiationException', 'Integer', 'InternalError', 'InterruptedException',
+    'Iterable', 'LinkageError', 'Long', 'Math', 'NegativeArraySizeException',
+    'NoClassDefFoundError', 'NoSuchFieldError', 'NoSuchFieldException',
+    'NoSuchMethodError', 'NoSuchMethodException', 'NullPointerException', 'Number',
+    'NumberFormatException', 'Object', 'OutOfMemoryError', 'Override', 'Package',
+    'Process', 'ProcessBuilder', 'Readable', 'ReflectiveOperationException',
+    'Runnable', 'Runtime', 'RuntimeException', 'RuntimePermission', 'SafeVarargs',
+    'SecurityException', 'SecurityManager', 'Short', 'StackOverflowError',
+    'StackTraceElement', 'StrictMath', 'String', 'StringBuffer', 'StringBuilder',
+    'StringIndexOutOfBoundsException', 'SuppressWarnings', 'System', 'Thread',
+    'ThreadDeath', 'ThreadGroup', 'ThreadLocal', 'Throwable',
+    'TypeNotPresentException', 'UnknownError', 'UnsatisfiedLinkError',
+    'UnsupportedClassVersionError', 'UnsupportedOperationException', 'VerifyError',
+    'VirtualMachineError', 'Void'])
+
 class JavaObject(ObjectDescription):
     option_spec = {
         'noindex': directives.flag,
@@ -33,6 +62,9 @@ class JavaObject(ObjectDescription):
         ref['java:outertype'] = self.get_type()
 
         package = self.env.temp_data.get('java:imports', dict()).get(target, None)
+
+        if not package and target in java_dot_lang:
+            package = 'java.lang'
 
         if package:
             ref['java:imported'] = True
