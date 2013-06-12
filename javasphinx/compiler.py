@@ -45,6 +45,10 @@ class JavadocRestCompiler(object):
         for name, value in doc.params:
             output.add_line(':param %s: %s' % (name, self.__html_to_rst(value)))
 
+        for exception in doc.throws:
+            description = doc.throws[exception]
+            output.add_line(':throws %s: %s' % (exception, self.__html_to_rst(description)))
+
         if doc.return_doc:
             output.add_line(':return: %s' % (self.__html_to_rst(doc.return_doc),))
 
