@@ -52,7 +52,28 @@ class JavadocRestCompiler(object):
         if doc.return_doc:
             output.add_line(':return: %s' % (self.__html_to_rst(doc.return_doc),))
 
+        if doc.tags.get('see'):
+            output.clear()
+
+            see_also = ', '.join(self.__output_see(see) for see in doc.tags['see'])
+            output.add_line('**See also:** %s' % (see_also,))
+
+            print doc.tags['see'], see_also
+
         return output
+
+    def __output_see(self, see):
+        """ Convert the argument to a @see tag to rest """
+
+        if see.startswith('<a href'):
+            # HTML link -- <a href="...">...</a>
+            return self.__html_to_rst(see)
+        elif '"' in see:
+            # Plain text
+            return see
+        else:
+            # Type reference (default)
+            return ':java:ref:`%s`' % (see.replace('#', '.').replace(' ', ''),)
 
     def compile_type(self, declaration):
         signature = util.StringBuilder()
