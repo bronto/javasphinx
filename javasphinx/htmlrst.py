@@ -307,9 +307,12 @@ class Converter(object):
             # them. This is necessary since code examples containing { and } are
             # commonly wrapped in {@code ...} tags
 
-            j = s.index('}', i + start_length) + 1
-            while s.count('{', i, j) != s.count('}', i, j):
-                j = s.index('}', j) + 1
+            try:
+                j = s.find('}', i + start_length) + 1
+                while s.count('{', i, j) != s.count('}', i, j):
+                    j = s.index('}', j) + 1
+            except ValueError:
+                raise ValueError('Unbalanced {} brackets in ' + tag + ' tag')
 
             parts.append(f(s[i + start_length:j - 1].strip()))
             i = s.find(start, j)

@@ -3,6 +3,7 @@
 
 import cPickle as pickle
 
+import logging
 import sys
 import os
 import os.path
@@ -137,6 +138,14 @@ def get_newer(a, b):
 
     return a
 
+def format_syntax_error(e):
+    rest = ""
+    if e.at.position:
+        value = e.at.value
+        pos = e.at.position
+        rest = ' at %s line %d, character %d' % (value, pos[0], pos[1])
+    return e.description + rest
+
 def generate_from_source_file(doc_compiler, source_file, cache_dir):
     if cache_dir:
         cache_file = os.path.join(cache_dir, source_file.replace(os.sep, ':')) + '-CACHE'
@@ -152,15 +161,15 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
 
     try:
         ast = javalang.parse.parse(source)
+    except javalang.parser.JavaSyntaxError, e:
+        util.error('Syntax error in %s: %s', source_file, format_syntax_error(e))
     except Exception:
-        sys.stderr.write('Exception while parsing ' + source_file + '\n')
-        raise
+        util.unexpected('Unexpected exception while parsing %s', source_file)
 
     try:
         documents = doc_compiler.compile(ast)
     except Exception:
-        sys.stderr.write('Exception while compiling ' + source_file + '\n')
-        raise
+        util.unexpected('Unexpected exception while compiling %s', source_file)
 
     if cache_file:
         dump_file = open(cache_file, 'w')
@@ -210,6 +219,8 @@ def is_excluded(root, excludes):
     return False
 
 def main(argv=sys.argv):
+    logging.basicConfig(level=logging.WARN)
+
     parser = OptionParser(
         usage="""\
 usage: %prog [options] -o <output_path> <input_path> [exclude_paths, ...]

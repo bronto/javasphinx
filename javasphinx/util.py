@@ -1,7 +1,9 @@
 # Copyright (c) 2012 Bronto Software Inc.
 # Licensed under the MIT License
 
+import logging
 import re
+import sys
 
 class StringBuilder(list):
     def build(self):
@@ -91,3 +93,11 @@ class Document(object):
         output = self.collapse_empty_lines_re.sub('\n\n', output)
 
         return output
+
+def error(s, *args, **kwargs):
+    logging.error(s, *args, **kwargs)
+    sys.exit(1)
+
+def unexpected(s, *args, **kwargs):
+    logging.exception(s, *args, **kwargs)
+    sys.exit(1)
