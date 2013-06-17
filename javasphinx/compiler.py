@@ -58,8 +58,6 @@ class JavadocRestCompiler(object):
             see_also = ', '.join(self.__output_see(see) for see in doc.tags['see'])
             output.add_line('**See also:** %s' % (see_also,))
 
-            print doc.tags['see'], see_also
-
         return output
 
     def __output_see(self, see):
