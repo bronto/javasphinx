@@ -551,6 +551,10 @@ class JavaDomain(Domain):
         # Try creating an external documentation reference
         ref = extdoc.get_javadoc_ref(self.env, target, target)
 
+        if not ref and target in java_dot_lang:
+            fulltarget = 'java.lang.' + target
+            ref = extdoc.get_javadoc_ref(self.env, fulltarget, fulltarget)
+
         # If the target was imported try with the package prefixed
         if not ref and imported:
             fulltarget = package + '.' + target
