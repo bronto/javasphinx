@@ -194,7 +194,7 @@ class JavaMethod(JavaObject):
                    typerolename='type', typenames=('type',)),
         Field('returnvalue', label=l_('Returns'), has_arg=False,
               names=('returns', 'return')),
-        GroupedField('throws', names=('throws',), label=l_('Throws'))
+        GroupedField('throws', names=('throws',), label=l_('Throws'), rolename='type')
     ]
 
     def handle_method_signature(self, sig, signode):
