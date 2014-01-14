@@ -22,9 +22,15 @@ def get_javadoc_ref(app, rawtext, text):
     method = None
 
     if '(' in text:
-        split_point = text.rindex('.', 0, text.index('('))
-        method = text[split_point + 1:]
-        text = text[:split_point]
+        # If the javadoc contains a line like this:
+        # {@link #sort(List)}
+        # there is no package so the text.rindex will fail
+        try:
+            split_point = text.rindex('.', 0, text.index('('))
+            method = text[split_point + 1:]
+            text = text[:split_point]
+        except ValueError:
+            pass
 
     for pkg, (baseurl, ext_type) in javadoc_url_map.items():
         if text.startswith(pkg + '.') and len(pkg) > len(package):
