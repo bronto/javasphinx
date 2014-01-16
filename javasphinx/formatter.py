@@ -49,7 +49,6 @@ def output_type(type, output, with_generics=True):
 
     if isinstance(type, javalang.tree.BasicType):
         output.append(type.name)
-        output.append(dim)
     else:
         while type:
             output.append(type.name)
@@ -61,6 +60,7 @@ def output_type(type, output, with_generics=True):
 
             if type:
                 output.append('.')
+    output.append(dim)
 
 @formatter
 def output_exception(exception, output):
