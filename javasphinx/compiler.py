@@ -39,8 +39,8 @@ class JavadocRestCompiler(object):
             output.add(self.__html_to_rst(doc.description))
             output.clear()
 
-        if doc.author:
-            output.add_line(':author: %s' % (self.__html_to_rst(doc.author),))
+        if doc.authors:
+            output.add_line(':author: %s' % (self.__html_to_rst(', '.join(doc.authors)),))
 
         for name, value in doc.params:
             output.add_line(':param %s: %s' % (name, self.__html_to_rst(value)))
