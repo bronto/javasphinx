@@ -35,6 +35,7 @@ def get_javadoc_ref(app, rawtext, text):
     for pkg, (baseurl, ext_type) in javadoc_url_map.items():
         if text.startswith(pkg + '.') and len(pkg) > len(package):
             source = baseurl, ext_type
+            package = pkg
 
     if not source:
         return None
