@@ -178,10 +178,10 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
 
     return documents
 
-def generate_documents(source_files, cache_dir, verbose):
+def generate_documents(source_files, cache_dir, verbose, member_headers):
     documents = {}
     sources = {}
-    doc_compiler = compiler.JavadocRestCompiler()
+    doc_compiler = compiler.JavadocRestCompiler(None, member_headers)
 
     for source_file in source_files:
         if verbose:
@@ -245,6 +245,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Overwrite new and changed files', default=False)
     parser.add_option('-T', '--no-toc', action='store_true', dest='notoc',
                       help='Don\'t create a table of contents file')
+    parser.add_option('--no-member-headers', action='store_false', default=True, dest='member_headers',
+                      help='Don\'t generate headers for class members')
     parser.add_option('-s', '--suffix', action='store', dest='suffix',
                       help='file suffix (default: rst)', default='rst')
     parser.add_option('-I', '--include', action='append', dest='includes',
@@ -285,7 +287,8 @@ Note: By default this script will not overwrite already created files.""")
     for input_path in input_paths:
         source_files.extend(find_source_files(input_path, excludes))
 
-    packages, documents, sources = generate_documents(source_files, opts.cache_dir, opts.verbose)
+    packages, documents, sources = generate_documents(source_files, opts.cache_dir, opts.verbose,
+                                                      opts.member_headers)
 
     write_documents(documents, sources, opts)
 

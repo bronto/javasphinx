@@ -12,7 +12,7 @@ class JavadocRestCompiler(object):
     """ Javadoc to ReST compiler. Builds ReST documentation from a Java syntax
     tree. """
 
-    def __init__(self, filter=None):
+    def __init__(self, filter=None, member_headers=True):
         if filter:
             self.filter = filter
         else:
@@ -20,6 +20,8 @@ class JavadocRestCompiler(object):
             self.filter = lambda node: isinstance(node, javalang.tree.Declaration) and 'private' not in node.modifiers
 
         self.converter = htmlrst.Converter()
+
+        self.member_headers = member_headers
 
     def __html_to_rst(self, s):
         return self.converter.convert(s)
@@ -214,7 +216,8 @@ class JavadocRestCompiler(object):
 
             document.add_heading('Enum Constants')
             for enum_constant in enum_constants:
-                document.add_heading(enum_constant.name, '^')
+                if self.member_headers:
+                    document.add_heading(enum_constant.name, '^')
                 c = self.compile_enum_constant(name, enum_constant)
                 c.add_option('outertype', name)
                 document.add_object(c)
@@ -224,7 +227,8 @@ class JavadocRestCompiler(object):
             document.add_heading('Fields', '-')
             fields.sort(key=lambda f: f.declarators[0].name)
             for field in fields:
-                document.add_heading(field.declarators[0].name, '^')
+                if self.member_headers:
+                    document.add_heading(field.declarators[0].name, '^')
                 f = self.compile_field(field)
                 f.add_option('outertype', name)
                 document.add_object(f)
@@ -234,7 +238,8 @@ class JavadocRestCompiler(object):
             document.add_heading('Constructors', '-')
             constructors.sort(key=lambda c: c.name)
             for constructor in constructors:
-                document.add_heading(constructor.name, '^')
+                if self.member_headers:
+                    document.add_heading(constructor.name, '^')
                 c = self.compile_constructor(constructor)
                 c.add_option('outertype', name)
                 document.add_object(c)
@@ -244,7 +249,8 @@ class JavadocRestCompiler(object):
             document.add_heading('Methods', '-')
             methods.sort(key=lambda m: m.name)
             for method in methods:
-                document.add_heading(method.name, '^')
+                if self.member_headers:
+                    document.add_heading(method.name, '^')
                 m = self.compile_method(method)
                 m.add_option('outertype', name)
                 document.add_object(m)
