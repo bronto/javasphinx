@@ -281,8 +281,7 @@ class JavadocRestCompiler(object):
             # If the import's final part wasn't capitalized,
             # append it to the class parts anyway so sphinx doesn't complain.
             if cls_parts == []:
-                parts = imp.path.split('.')
-                cls_parts.append(parts[-1])
+                cls_parts.append(package_parts.pop())
 
             package = '.'.join(package_parts)
             cls = '.'.join(cls_parts)
