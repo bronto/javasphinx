@@ -1,7 +1,7 @@
 
 project = 'javasphinx'
-version = '0.9.11'
-release = '0.9.11'
+version = '0.9.12'
+release = '0.9.12'
 
 extensions = ['javasphinx']
 
