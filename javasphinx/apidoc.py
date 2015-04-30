@@ -51,7 +51,7 @@ def find_source_files(input_path, excludes):
 
 def write_toc(packages, opts):
     doc = util.Document()
-    doc.add_heading('Javadoc', '=')
+    doc.add_heading(opts.toc_title, '=')
 
     toc = util.Directive('toctree')
     toc.add_option('maxdepth', '2')
@@ -258,6 +258,8 @@ Note: By default this script will not overwrite already created files.""")
                       help='Overwrite new and changed files', default=False)
     parser.add_option('-T', '--no-toc', action='store_true', dest='notoc',
                       help='Don\'t create a table of contents file')
+    parser.add_option('-t', '--title', dest='toc_title', default='Javadoc',
+                      help='Title to use on table of contents')
     parser.add_option('--no-member-headers', action='store_false', default=True, dest='member_headers',
                       help='Don\'t generate headers for class members')
     parser.add_option('-s', '--suffix', action='store', dest='suffix',
