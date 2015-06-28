@@ -266,7 +266,7 @@ Note: By default this script will not overwrite already created files.""")
                       help='file suffix (default: rst)', default='rst')
     parser.add_option('-I', '--include', action='append', dest='includes',
                       help='Additional input paths to scan', default=[])
-    parser.add_option('-p', '--parser', action='parser_lib', default='lxml',
+    parser.add_option('-p', '--parser', dest='parser_lib', default='lxml',
                       help='Beautiful Soup---html parser library option.')
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='verbose output')
