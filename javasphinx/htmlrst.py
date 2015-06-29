@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 Cell = collections.namedtuple('Cell', ['type', 'rowspan', 'colspan', 'contents'])
 
 class Converter(object):
-    def __init__(self):
+    def __init__(self, parser):
         self._unknown_tags = set()
         self._clear = '\n\n..\n\n'
 
@@ -36,6 +36,7 @@ class Converter(object):
         self._html_tag = re.compile(r'<.*?>')
 
         self._preprocess_entity = re.compile(r'&(nbsp|lt|gt|amp)([^;]|[\n])')
+        self._parser = parser
 
     # --------------------------------------------------------------------------
     # ---- reST Utility Methods ----
@@ -402,7 +403,7 @@ class Converter(object):
         if not s_html.strip():
             return ''
 
-        soup = BeautifulSoup(s_html, 'lxml')
+        soup = BeautifulSoup(s_html, self._parser)
         top = soup.html.body
 
         result = self._process_children(top)

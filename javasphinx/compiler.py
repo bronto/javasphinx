@@ -25,14 +25,14 @@ class JavadocRestCompiler(object):
     """ Javadoc to ReST compiler. Builds ReST documentation from a Java syntax
     tree. """
 
-    def __init__(self, filter=None, member_headers=True):
+    def __init__(self, filter=None, member_headers=True, parser='lxml'):
         if filter:
             self.filter = filter
         else:
             # Default, document all non-private members
             self.filter = lambda node: isinstance(node, javalang.tree.Declaration) and 'private' not in node.modifiers
 
-        self.converter = htmlrst.Converter()
+        self.converter = htmlrst.Converter(parser)
 
         self.member_headers = member_headers
 
