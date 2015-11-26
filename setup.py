@@ -33,7 +33,7 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries"
         ],
-    install_requires=["javalang>=0.9.5", "lxml", "beautifulsoup4"],
+    install_requires=["javalang>=0.10.0", "lxml", "beautifulsoup4"],
     entry_points={
         'console_scripts': [
             'javasphinx-apidoc = javasphinx.apidoc:main'
