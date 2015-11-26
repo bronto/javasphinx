@@ -15,8 +15,8 @@
 #
 
 project = 'javasphinx'
-version = '0.9.12'
-release = '0.9.12'
+version = '0.9.13'
+release = '0.9.13'
 
 extensions = ['javasphinx']
 
