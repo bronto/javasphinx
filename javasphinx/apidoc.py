@@ -16,6 +16,7 @@
 
 import cPickle as pickle
 
+import hashlib
 import logging
 import sys
 import os
@@ -161,7 +162,8 @@ def format_syntax_error(e):
 
 def generate_from_source_file(doc_compiler, source_file, cache_dir):
     if cache_dir:
-        cache_file = os.path.join(cache_dir, source_file.replace(os.sep, ':')) + '-CACHE'
+        fingerprint = hashlib.md5(source_file).hexdigest()
+        cache_file = os.path.join(cache_dir, 'parsed-' + fingerprint + '.p')
 
         if get_newer(source_file, cache_file) == cache_file:
             return pickle.load(open(cache_file))
