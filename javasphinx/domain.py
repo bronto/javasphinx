@@ -518,7 +518,9 @@ class JavaDomain(Domain):
     }
 
     def clear_doc(self, docname):
-        for fullname, (fn, _, _) in self.data['objects'].items():
+        objects = dict(self.data['objects'])
+
+        for fullname, (fn, _, _) in objects.items():
             if fn == docname:
                 del self.data['objects'][fullname]
 
