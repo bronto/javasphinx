@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-from domain import JavaDomain
-from extdoc import javadoc_role
+from .domain import JavaDomain
+from .extdoc import javadoc_role
 
 def setup(app):
     app.add_domain(JavaDomain)

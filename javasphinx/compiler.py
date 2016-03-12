@@ -17,9 +17,9 @@
 import javalang
 import re
 
-import formatter
-import util
-import htmlrst
+import javasphinx.formatter as formatter
+import javasphinx.util as util
+import javasphinx.htmlrst as htmlrst
 
 class JavadocRestCompiler(object):
     """ Javadoc to ReST compiler. Builds ReST documentation from a Java syntax

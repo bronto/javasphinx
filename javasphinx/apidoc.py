@@ -26,8 +26,8 @@ from optparse import OptionParser
 
 import javalang
 
-import compiler
-import util
+import javasphinx.compiler
+import javasphinx.util
 
 def find_source_files(input_path, excludes):
     """ Get a list of filenames for all Java source files within the given
