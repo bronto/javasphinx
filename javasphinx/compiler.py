@@ -255,7 +255,7 @@ class JavadocRestCompiler(object):
         fields = filter(self.filter, declaration.fields)
         if fields:
             document.add_heading('Fields', '-')
-            fields.sort(key=lambda f: f.declarators[0].name)
+            list(fields).sort(key=lambda f: f.declarators[0].name)
             for field in fields:
                 if self.member_headers:
                     document.add_heading(field.declarators[0].name, '^')
@@ -266,7 +266,7 @@ class JavadocRestCompiler(object):
         constructors = filter(self.filter, declaration.constructors)
         if constructors:
             document.add_heading('Constructors', '-')
-            constructors.sort(key=lambda c: c.name)
+            list(constructors).sort(key=lambda c: c.name)
             for constructor in constructors:
                 if self.member_headers:
                     document.add_heading(constructor.name, '^')
@@ -277,7 +277,7 @@ class JavadocRestCompiler(object):
         methods = filter(self.filter, declaration.methods)
         if methods:
             document.add_heading('Methods', '-')
-            methods.sort(key=lambda m: m.name)
+            list(methods).sort(key=lambda m: m.name)
             for method in methods:
                 if self.member_headers:
                     document.add_heading(method.name, '^')
