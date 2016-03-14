@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from __future__ import unicode_literals
+from past.builtins import basestring
 
 import collections
 import re
@@ -235,7 +235,7 @@ class Converter(object):
         return ''.join(node.strings)
 
     def _process(self, node):
-        if isinstance(node, str):
+        if isinstance(node, basestring):
             return self._compress_whitespace(node)
 
         simple_tags = {
