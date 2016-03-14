@@ -252,10 +252,10 @@ class JavadocRestCompiler(object):
                 c.add_option('outertype', name)
                 document.add_object(c)
 
-        fields = filter(self.filter, declaration.fields)
+        fields = list(filter(self.filter, declaration.fields))
         if fields:
             document.add_heading('Fields', '-')
-            list(fields).sort(key=lambda f: f.declarators[0].name)
+            fields.sort(key=lambda f: f.declarators[0].name)
             for field in fields:
                 if self.member_headers:
                     document.add_heading(field.declarators[0].name, '^')
