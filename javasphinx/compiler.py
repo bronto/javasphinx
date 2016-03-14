@@ -263,10 +263,10 @@ class JavadocRestCompiler(object):
                 f.add_option('outertype', name)
                 document.add_object(f)
 
-        constructors = filter(self.filter, declaration.constructors)
+        constructors = list(filter(self.filter, declaration.constructors))
         if constructors:
             document.add_heading('Constructors', '-')
-            list(constructors).sort(key=lambda c: c.name)
+            constructors.sort(key=lambda c: c.name)
             for constructor in constructors:
                 if self.member_headers:
                     document.add_heading(constructor.name, '^')
@@ -274,10 +274,10 @@ class JavadocRestCompiler(object):
                 c.add_option('outertype', name)
                 document.add_object(c)
 
-        methods = filter(self.filter, declaration.methods)
+        methods = list(filter(self.filter, declaration.methods))
         if methods:
             document.add_heading('Methods', '-')
-            list(methods).sort(key=lambda m: m.name)
+            methods.sort(key=lambda m: m.name)
             for method in methods:
                 if self.member_headers:
                     document.add_heading(method.name, '^')
