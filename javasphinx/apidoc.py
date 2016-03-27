@@ -162,11 +162,11 @@ def format_syntax_error(e):
 
 def generate_from_source_file(doc_compiler, source_file, cache_dir):
     if cache_dir:
-        fingerprint = hashlib.md5(source_file).hexdigest()
+        fingerprint = hashlib.md5(source_file.encode()).hexdigest()
         cache_file = os.path.join(cache_dir, 'parsed-' + fingerprint + '.p')
 
         if get_newer(source_file, cache_file) == cache_file:
-            return pickle.load(open(cache_file))
+            return pickle.load(open(cache_file, 'rb'))
     else:
         cache_file = None
 
@@ -187,7 +187,7 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
         util.unexpected('Unexpected exception while compiling %s', source_file)
 
     if cache_file:
-        dump_file = open(cache_file, 'w')
+        dump_file = open(cache_file, 'wb')
         pickle.dump(documents, dump_file)
         dump_file.close()
 
