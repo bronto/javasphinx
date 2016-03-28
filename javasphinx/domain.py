@@ -30,9 +30,9 @@ from sphinx.util.docfields import Field, TypedField, GroupedField
 
 import javalang
 
-import extdoc
-import formatter
-import util
+import javasphinx.extdoc as extdoc
+import javasphinx.formatter as formatter
+import javasphinx.util as util
 
 # Classes in java.lang. These are available without an import.
 java_dot_lang = set([
@@ -518,7 +518,9 @@ class JavaDomain(Domain):
     }
 
     def clear_doc(self, docname):
-        for fullname, (fn, _, _) in self.data['objects'].items():
+        objects = dict(self.data['objects'])
+
+        for fullname, (fn, _, _) in objects.items():
             if fn == docname:
                 del self.data['objects'][fullname]
 
@@ -580,5 +582,5 @@ class JavaDomain(Domain):
             return None
 
     def get_objects(self):
-        for refname, (docname, type, _) in self.data['objects'].iteritems():
+        for refname, (docname, type, _) in self.data['objects'].items():
             yield (refname, refname, type, docname, refname, 1)

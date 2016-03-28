@@ -17,9 +17,9 @@
 import javalang
 import re
 
-import formatter
-import util
-import htmlrst
+import javasphinx.formatter as formatter
+import javasphinx.util as util
+import javasphinx.htmlrst as htmlrst
 
 class JavadocRestCompiler(object):
     """ Javadoc to ReST compiler. Builds ReST documentation from a Java syntax
@@ -252,7 +252,7 @@ class JavadocRestCompiler(object):
                 c.add_option('outertype', name)
                 document.add_object(c)
 
-        fields = filter(self.filter, declaration.fields)
+        fields = list(filter(self.filter, declaration.fields))
         if fields:
             document.add_heading('Fields', '-')
             fields.sort(key=lambda f: f.declarators[0].name)
@@ -263,7 +263,7 @@ class JavadocRestCompiler(object):
                 f.add_option('outertype', name)
                 document.add_object(f)
 
-        constructors = filter(self.filter, declaration.constructors)
+        constructors = list(filter(self.filter, declaration.constructors))
         if constructors:
             document.add_heading('Constructors', '-')
             constructors.sort(key=lambda c: c.name)
@@ -274,7 +274,7 @@ class JavadocRestCompiler(object):
                 c.add_option('outertype', name)
                 document.add_object(c)
 
-        methods = filter(self.filter, declaration.methods)
+        methods = list(filter(self.filter, declaration.methods))
         if methods:
             document.add_heading('Methods', '-')
             methods.sort(key=lambda m: m.name)

@@ -14,13 +14,16 @@
 # limitations under the License.
 #
 
+from __future__ import unicode_literals
+from builtins import str
+
 import logging
 import re
 import sys
 
 class StringBuilder(list):
     def build(self):
-        return unicode(self)
+        return str(self)
 
     def __str__(self):
         return ''.join(self)
@@ -97,11 +100,11 @@ class Document(object):
             elif isinstance(obj, Document):
                 output.append(obj.build())
             else:
-                output.append(unicode(obj))
+                output.append(str(obj))
 
         output.append('\n\n')
 
-        output = unicode(output)
+        output = str(output)
         output = self.remove_trailing_whitespace_re.sub('', output)
         output = self.collapse_empty_lines_re.sub('\n\n', output)
 

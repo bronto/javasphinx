@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+from __future__ import unicode_literals
+from builtins import str
+
 import collections
 import re
 
@@ -233,7 +236,7 @@ class Converter(object):
         return ''.join(node.strings)
 
     def _process(self, node):
-        if isinstance(node, basestring):
+        if isinstance(node, str):
             return self._compress_whitespace(node)
 
         simple_tags = {
@@ -395,8 +398,8 @@ class Converter(object):
     # ---- Conversion entry point ----
 
     def convert(self, s_html):
-        if not isinstance(s_html, unicode):
-            s_html = unicode(s_html, 'utf8')
+        if not isinstance(s_html, str):
+            s_html = str(s_html, 'utf8')
 
         s_html = self._preprocess(s_html)
 

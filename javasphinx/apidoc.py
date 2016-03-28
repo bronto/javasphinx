@@ -14,7 +14,12 @@
 # limitations under the License.
 #
 
-import cPickle as pickle
+from __future__ import print_function, unicode_literals
+
+try:
+   import cPickle as pickle
+except:
+   import pickle
 
 import hashlib
 import logging
@@ -26,8 +31,8 @@ from optparse import OptionParser
 
 import javalang
 
-import compiler
-import util
+import javasphinx.compiler as compiler
+import javasphinx.util as util
 
 def find_source_files(input_path, excludes):
     """ Get a list of filenames for all Java source files within the given
@@ -71,7 +76,7 @@ def write_toc(packages, opts):
         sys.exit(1)
 
     f = open(fullpath, 'w')
-    f.write(doc.build().encode('utf8'))
+    f.write(doc.build())
     f.close()
 
 def write_documents(documents, sources, opts):
@@ -104,7 +109,7 @@ def write_documents(documents, sources, opts):
                 continue
 
         f = open(fullpath, 'w')
-        f.write(document.encode('utf8'))
+        f.write(document)
         f.close()
 
     # Write package-index for each package
@@ -134,7 +139,7 @@ def write_documents(documents, sources, opts):
             sys.exit(1)
 
         f = open(fullpath, 'w')
-        f.write(doc.build().encode('utf8'))
+        f.write(doc.build())
         f.close()
 
 def get_newer(a, b):
@@ -176,7 +181,7 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
 
     try:
         ast = javalang.parse.parse(source)
-    except javalang.parser.JavaSyntaxError, e:
+    except javalang.parser.JavaSyntaxError as e:
         util.error('Syntax error in %s: %s', source_file, format_syntax_error(e))
     except Exception:
         util.unexpected('Unexpected exception while parsing %s', source_file)
@@ -200,7 +205,7 @@ def generate_documents(source_files, cache_dir, verbose, member_headers, parser)
 
     for source_file in source_files:
         if verbose:
-            print 'Processing', source_file
+            print('Processing', source_file)
 
         this_file_documents = generate_from_source_file(doc_compiler, source_file, cache_dir)
 
