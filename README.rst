@@ -3,6 +3,10 @@
 javasphinx
 ==========
 
+.. image:: https://readthedocs.org/projects/bronto-javasphinx/badge/?version=latest
+:target: http://bronto-javasphinx.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
 javasphinx is an extension to the Sphinx documentation system which adds support
 for documenting Java projects. It includes a Java domain for writing
 documentation manually and a javasphinx-apidoc utility which will automatically
@@ -12,4 +16,4 @@ javasphinx is available in the Python Package Index (PyPi) under the name
 *javasphinx* and can be installed using tools such as ``pip`` or
 ``easy_install``.
 
-Documentation for javasphinx is available at http://bronto.github.com/javasphinx/
+Documentation for javasphinx is available at http://bronto-javasphinx.readthedocs.io
