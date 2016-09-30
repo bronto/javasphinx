@@ -20,7 +20,7 @@ import string
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 
-from sphinx import addnodes
+from sphinx import addnodes, version_info
 from sphinx.roles import XRefRole
 from sphinx.locale import l_, _
 from sphinx.domains import Domain, ObjType
@@ -187,7 +187,7 @@ class JavaObject(ObjectDescription):
 
         indextext = self.get_index_text(package, type, name)
         if indextext:
-            self.indexnode['entries'].append(('single', indextext, fullname, ''))
+            self.indexnode['entries'].append(_create_indexnode(indextext, fullname))
 
     def before_content(self):
         self.set_type = False
@@ -222,7 +222,7 @@ class JavaMethod(JavaObject):
         mods = formatter.output_modifiers(member.modifiers).build()
         signode += nodes.Text(mods + ' ', mods + ' ')
 
-        if  member.type_parameters:
+        if member.type_parameters:
             type_params = formatter.output_type_params(member.type_parameters).build()
             signode += nodes.Text(type_params, type_params)
             signode += nodes.Text(' ', ' ')
@@ -425,7 +425,7 @@ class JavaPackage(Directive):
             ret.append(targetnode)
 
             indextext = _('%s (package)') % (package,)
-            inode = addnodes.index(entries=[('single', indextext, 'package-' + package, '')])
+            inode = addnodes.index(entries=[_create_indexnode(indextext, 'package-' + package)])
             ret.append(inode)
 
         return ret
@@ -584,3 +584,11 @@ class JavaDomain(Domain):
     def get_objects(self):
         for refname, (docname, type, _) in self.data['objects'].items():
             yield (refname, refname, type, docname, refname, 1)
+
+
+def _create_indexnode(indextext, fullname):
+    # See https://github.com/sphinx-doc/sphinx/issues/2673
+    if version_info < (1, 4):
+        return ('single', indextext, fullname, '')
+    else:
+        return ('single', indextext, fullname, '', None)
