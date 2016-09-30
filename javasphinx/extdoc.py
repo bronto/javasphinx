@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import re
+
 from docutils import nodes, utils
 from sphinx.util.nodes import split_explicit_title
 
@@ -22,13 +24,13 @@ def get_javadoc_ref(app, rawtext, text):
 
     # Add default Java SE sources
     if not javadoc_url_map.get("java"):
-        javadoc_url_map["java"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+        javadoc_url_map["java"] = ("http://docs.oracle.com/javase/8/docs/api", 'javadoc8')
     if not javadoc_url_map.get("javax"):
-        javadoc_url_map["javax"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+        javadoc_url_map["javax"] = ("http://docs.oracle.com/javase/8/docs/api", 'javadoc8')
     if not javadoc_url_map.get("org.xml"):
-        javadoc_url_map["org.xml"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+        javadoc_url_map["org.xml"] = ("http://docs.oracle.com/javase/8/docs/api", 'javadoc8')
     if not javadoc_url_map.get("org.w3c"):
-        javadoc_url_map["org.w3c"] = ("http://docs.oracle.com/javase/6/docs/api", 'javadoc')
+        javadoc_url_map["org.w3c"] = ("http://docs.oracle.com/javase/8/docs/api", 'javadoc8')
 
     source = None
     package = ''
@@ -76,6 +78,12 @@ def get_javadoc_ref(app, rawtext, text):
         source = baseurl + package.replace('.', '/') + '/' + cls + '.html'
         if method:
             source = source + '#' + method
+    elif ext_type == 'javadoc8':
+        if not cls:
+            cls = 'package-summary'
+        source = baseurl + package.replace('.', '/') + '/' + cls + '.html'
+        if method:
+            source = source + '#' + re.sub(r'[()]', '-', method)
     elif ext_type == 'sphinx':
         if not cls:
             cls = 'package-index'
