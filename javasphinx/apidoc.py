@@ -34,6 +34,12 @@ import javalang
 import javasphinx.compiler as compiler
 import javasphinx.util as util
 
+def encode_output(s):
+   if isinstance(s, str):
+      return s
+   else:
+      return s.encode('utf-8')
+
 def find_source_files(input_path, excludes):
     """ Get a list of filenames for all Java source files within the given
     directory.
@@ -76,7 +82,7 @@ def write_toc(packages, opts):
         sys.exit(1)
 
     f = open(fullpath, 'w')
-    f.write(doc.build())
+    f.write(encode_output(doc.build()))
     f.close()
 
 def write_documents(documents, sources, opts):
@@ -109,7 +115,7 @@ def write_documents(documents, sources, opts):
                 continue
 
         f = open(fullpath, 'w')
-        f.write(document)
+        f.write(encode_output(document))
         f.close()
 
     # Write package-index for each package
@@ -139,7 +145,7 @@ def write_documents(documents, sources, opts):
             sys.exit(1)
 
         f = open(fullpath, 'w')
-        f.write(doc.build())
+        f.write(encode_output(doc.build()))
         f.close()
 
 def get_newer(a, b):
