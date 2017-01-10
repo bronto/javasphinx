@@ -19,7 +19,7 @@ from setuptools import setup
 setup(
     name = "javasphinx",
     packages = ["javasphinx"],
-    version = "0.9.14",
+    version = "0.9.15",
     author = "Chris Thunes",
     author_email = "cthunes@brewtab.com",
     url = "http://github.com/bronto/javasphinx",
