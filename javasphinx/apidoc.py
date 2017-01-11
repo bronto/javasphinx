@@ -69,10 +69,8 @@ def write_toc(packages, opts):
     toc.add_option('maxdepth', '2')
     doc.add_object(toc)
 
-    packages = list(packages)
-    packages.sort()
-    for package in packages:
-        toc.add_content(package.replace('.', '/') + '/package-index\n')
+    for package in sorted(packages.keys()):
+        toc.add_content("%s/package-index\n" % package.replace('.', '/'))
 
     filename = 'packages.' + opts.suffix
     fullpath = os.path.join(opts.destdir, filename)
@@ -85,11 +83,14 @@ def write_toc(packages, opts):
     f.write(encode_output(doc.build()))
     f.close()
 
-def write_documents(documents, sources, opts):
+def write_documents(packages, documents, sources, opts):
     package_contents = dict()
 
     # Write individual documents
     for fullname, (package, name, document) in documents.items():
+        if is_package_info_doc(name):
+            continue
+
         package_path = package.replace('.', os.sep)
         filebasename = name.replace('.', '-')
         filename = filebasename + '.' + opts.suffix
@@ -119,19 +120,24 @@ def write_documents(documents, sources, opts):
         f.close()
 
     # Write package-index for each package
-    for package, index in package_contents.items():
+    for package, classes in package_contents.items():
         doc = util.Document()
         doc.add_heading(package, '=')
+
+        #Adds the package documentation (if any)
+        if packages[package] != '':
+            documentation = packages[package]
+            doc.add_line("\n%s" % documentation)
 
         doc.add_object(util.Directive('java:package', package))
 
         toc = util.Directive('toctree')
         toc.add_option('maxdepth', '1')
-        doc.add_object(toc)
 
-        index.sort()
-        for filebasename in index:
+        classes.sort()
+        for filebasename in classes:
             toc.add_content(filebasename + '\n')
+        doc.add_object(toc)
 
         package_path = package.replace('.', os.sep)
         filename = 'package-index.' + opts.suffix
@@ -192,8 +198,14 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
     except Exception:
         util.unexpected('Unexpected exception while parsing %s', source_file)
 
+    documents = {}
     try:
-        documents = doc_compiler.compile(ast)
+        if source_file.endswith("package-info.java"):
+            if ast.package is not None:
+                documentation = doc_compiler.compile_docblock(ast.package)
+                documents[ast.package.name] = (ast.package.name, 'package-info', documentation)
+        else:
+            documents = doc_compiler.compile(ast)
     except Exception:
         util.unexpected('Unexpected exception while compiling %s', source_file)
 
@@ -214,16 +226,25 @@ def generate_documents(source_files, cache_dir, verbose, member_headers, parser)
             print('Processing', source_file)
 
         this_file_documents = generate_from_source_file(doc_compiler, source_file, cache_dir)
-
         for fullname in this_file_documents:
             sources[fullname] = source_file
 
         documents.update(this_file_documents)
 
-    packages = set()
+    #Existing packages dict, where each key is a package name
+    #and each value is the package documentation (if any)
+    packages = {}
 
-    for package, _, _ in documents.values():
-        packages.add(package)
+    #Gets the name of the package where the document was declared
+    #and adds it to the packages dict with no documentation.
+    #Package documentation, if any, will be collected from package-info.java files.
+    for package, name, _ in documents.values():
+        packages[package] = ""
+
+    #Gets packages documentation from package-info.java documents (if any).
+    for package, name, content in documents.values():
+        if is_package_info_doc(name):
+            packages[package] = content
 
     return packages, documents, sources
 
@@ -243,6 +264,11 @@ def is_excluded(root, excludes):
         if root.startswith(exclude):
             return True
     return False
+
+def is_package_info_doc(document_name):
+    ''' Checks if the name of a document represents a package-info.java file. '''
+    return document_name == 'package-info'
+
 
 def main(argv=sys.argv):
     logging.basicConfig(level=logging.WARN)
@@ -320,7 +346,7 @@ Note: By default this script will not overwrite already created files.""")
     packages, documents, sources = generate_documents(source_files, opts.cache_dir, opts.verbose,
                                                       opts.member_headers, opts.parser_lib)
 
-    write_documents(documents, sources, opts)
+    write_documents(packages, documents, sources, opts)
 
     if not opts.notoc:
         write_toc(packages, opts)

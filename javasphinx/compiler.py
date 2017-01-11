@@ -15,7 +15,6 @@
 #
 
 import javalang
-import re
 
 import javasphinx.formatter as formatter
 import javasphinx.util as util
@@ -40,6 +39,7 @@ class JavadocRestCompiler(object):
         docblocks.
 
         """
+
         if not isinstance(node, javalang.tree.Declaration):
             return False
 
@@ -338,5 +338,8 @@ class JavadocRestCompiler(object):
             full_name = package + '.' + name
             document = self.compile_type_document(import_block, package, name, declaration)
             documents[full_name] = (package, name, document.build())
-
         return documents
+
+    def compile_docblock(self, documented):
+        ''' Compiles a single, standalone docblock. '''
+        return self.__output_doc(documented).build()
