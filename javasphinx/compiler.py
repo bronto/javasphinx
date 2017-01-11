@@ -338,8 +338,6 @@ class JavadocRestCompiler(object):
             full_name = package + '.' + name
             document = self.compile_type_document(import_block, package, name, declaration)
             documents[full_name] = (package, name, document.build())
-
-
         return documents
 
     def compile_docblock(self, documented):

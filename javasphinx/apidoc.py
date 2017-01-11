@@ -201,11 +201,9 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
     documents = {}
     try:
         if source_file.endswith("package-info.java"):
-            for node in dict(ast).values():
-                if isinstance(node, javalang.tree.PackageDeclaration):
-                    documentation = doc_compiler.compile_docblock(node)
-                    documents[node.name] = (node.name, 'package-info', documentation)
-                    break
+            if ast.package is not None:
+                documentation = doc_compiler.compile_docblock(ast.package)
+                documents[ast.package.name] = (ast.package.name, 'package-info', documentation)
         else:
             documents = doc_compiler.compile(ast)
     except Exception:
