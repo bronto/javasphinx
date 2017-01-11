@@ -115,9 +115,6 @@ def output_type_params(type_params, output):
 
 @formatter
 def output_declaration(declaration, output):
-    if declaration.annotations is None:
-        return
-
     for annotation in declaration.annotations:
         output_annotation(annotation, output)
 

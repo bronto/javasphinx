@@ -15,7 +15,6 @@
 #
 
 from __future__ import print_function, unicode_literals
-import re 
 
 try:
    import cPickle as pickle
@@ -70,8 +69,7 @@ def write_toc(packages, opts):
     toc.add_option('maxdepth', '2')
     doc.add_object(toc)
 
-    sorted_packages = sorted(packages.items(), key=lambda x: x[0])
-    for package, _ in sorted_packages:
+    for package in sorted(packages.keys()):
         toc.add_content("%s/package-index\n" % package.replace('.', '/'))
 
     filename = 'packages.' + opts.suffix
@@ -90,7 +88,7 @@ def write_documents(packages, documents, sources, opts):
 
     # Write individual documents
     for fullname, (package, name, document) in documents.items():
-        if is_package_info_doc(package, name):
+        if is_package_info_doc(name):
             continue
 
         package_path = package.replace('.', os.sep)
@@ -203,9 +201,11 @@ def generate_from_source_file(doc_compiler, source_file, cache_dir):
     documents = {}
     try:
         if source_file.endswith("package-info.java"):
-            for _, node in ast.filter(javalang.tree.PackageDeclaration):
-                document = doc_compiler.compile_package_documentation(node)
-                documents[node.name] = (node.name, node.name, document.build())
+            for node in dict(ast).values():
+                if isinstance(node, javalang.tree.PackageDeclaration):
+                    documentation = doc_compiler.compile_docblock(node)
+                    documents[node.name] = (node.name, 'package-info', documentation)
+                    break
         else:
             documents = doc_compiler.compile(ast)
     except Exception:
@@ -233,7 +233,6 @@ def generate_documents(source_files, cache_dir, verbose, member_headers, parser)
 
         documents.update(this_file_documents)
 
-
     #Existing packages dict, where each key is a package name
     #and each value is the package documentation (if any)
     packages = {}
@@ -241,13 +240,13 @@ def generate_documents(source_files, cache_dir, verbose, member_headers, parser)
     #Gets the name of the package where the document was declared
     #and adds it to the packages dict with no documentation.
     #Package documentation, if any, will be collected from package-info.java files.
-    for package, _, _ in documents.values():
+    for package, name, _ in documents.values():
         packages[package] = ""
 
-    #Gets packages documentation from package-info.java (if any).
+    #Gets packages documentation from package-info.java documents (if any).
     for package, name, content in documents.values():
-        if is_package_info_doc(package, name):
-            packages[name] = content
+        if is_package_info_doc(name):
+            packages[package] = content
 
     return packages, documents, sources
 
@@ -268,9 +267,9 @@ def is_excluded(root, excludes):
             return True
     return False
 
-def is_package_info_doc(package_name, document_name):
-    #if the object's package name is equal to the object name, the object is a package
-    return package_name == document_name
+def is_package_info_doc(document_name):
+    ''' Checks if the name of a document represents a package-info.java file. '''
+    return document_name == 'package-info'
 
 
 def main(argv=sys.argv):

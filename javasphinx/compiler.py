@@ -43,7 +43,7 @@ class JavadocRestCompiler(object):
         if not isinstance(node, javalang.tree.Declaration):
             return False
 
-        if node.modifiers is not None and 'private' in node.modifiers:
+        if 'private' in node.modifiers:
             return False
 
         if isinstance(node, javalang.tree.Documented) and node.documentation:
@@ -115,14 +115,6 @@ class JavadocRestCompiler(object):
         directive.add_content(doc)
 
         return directive
-
-    def compile_package_documentation(self, declaration):
-        signature = util.StringBuilder()
-        formatter.output_declaration(declaration, declaration.name)
-
-        doc = self.__output_doc(declaration)
-
-        return doc
 
     def compile_enum_constant(self, enum, constant):
         signature = util.StringBuilder()
@@ -349,3 +341,7 @@ class JavadocRestCompiler(object):
 
 
         return documents
+
+    def compile_docblock(self, documented):
+        ''' Compiles a single, standalone docblock. '''
+        return self.__output_doc(documented).build()
