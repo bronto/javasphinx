@@ -15,11 +15,11 @@
 #
 
 project = 'javasphinx'
-version = '0.9.14'
+version = '0.9.15'
 release = version
 
 extensions = ['javasphinx']
 
 master_doc = 'index'
-copyright = u'2012-2015, Bronto Software Inc. and contributors'
+copyright = u'2012-2017, Bronto Software Inc. and contributors'
 primary_domain = 'rst'
