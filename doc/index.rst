@@ -116,7 +116,7 @@ The Java domain uses the name **java** and provides the following directives,
 
    Use the ``return`` field to document the return type
 
-.. rst:directive:: .. java:construct:: constructor-signature
+.. rst:directive:: .. java:constructor:: constructor-signature
 
    Describe a Java constructor.
 
